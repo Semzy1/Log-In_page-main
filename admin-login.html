@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login - ShopEase</title>
+  <style>
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background-color: #f6f8fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 320px;
+    }
+    h2 {
+      margin-top: 0;
+      color: #1f7a8c;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 12px;
+      display: block;
+      color: #041627;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 8px;
+      margin-top: 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      background-color: #1f7a8c;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #15595c;
+    }
+    .error {
+      margin-top: 12px;
+      color: #dc3545;
+      font-weight: 600;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Admin Login</h2>
+    <form id="adminLoginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Enter username" required />
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password" required />
+      <button type="submit">Login</button>
+      <div id="errorMsg" class="error" role="alert" aria-live="assertive"></div>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('adminLoginForm');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // For demonstration, hardcoded credentials
+      const ADMIN_USERNAME = 'admin';
+      const ADMIN_PASSWORD = 'admin123';  // You can change this password as needed
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        errorMsg.textContent = '';
+
+        const username = form.username.value.trim();
+        const password = form.password.value;
+
+        if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+          try {
+            sessionStorage.setItem('focusflow_session', username);
+
+            // Optionally mark admin user in localStorage users if needed for flags
+            let users = [];
+            try {
+              users = JSON.parse(localStorage.getItem('focusflow_users') || '[]');
+            } catch (e) {
+              users = [];
+            }
+            let adminUser = users.find(u => u.username === username);
+            if (!adminUser) {
+              adminUser = { username, isAdmin: true };
+              users.push(adminUser);
+            } else {
+              adminUser.isAdmin = true;
+            }
+            localStorage.setItem('focusflow_users', JSON.stringify(users));
+          } catch (err) {
+            // Ignore storage errors silently
+          }
+
+          // Redirect to orders.html with admin access
+          window.location.href = 'orders.html';
+        } else {
+          errorMsg.textContent = 'Invalid username or password.';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

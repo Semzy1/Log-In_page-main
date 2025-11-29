@@ -1,0 +1,1 @@
+/* Disabled dynamic tabs and panels generation to avoid conflict with static payment.html UI */

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ShopEase — Orders</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{ --primary:#1f7a8c; --bg:#f6f8fa; --surface:#ffffff; --muted:#6b7280 }
+    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:#041627}
+    header{background:var(--surface);padding:12px 18px;box-shadow:0 2px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px}
+    .brand{font-weight:700;color:var(--primary)}
+    .container{max-width:980px;margin:20px auto;padding:18px;background:var(--surface);border-radius:10px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#fafafa}
+    .muted{color:var(--muted);font-size:0.95rem}
+    .actions{display:flex;gap:8px}
+    .btn{background:var(--primary);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none}
+    .small{font-size:0.9rem;padding:6px 10px}
+    .empty{padding:40px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><i class="fas fa-store"></i> ShopEase — Orders</div>
+    <div style="margin-left:auto" class="actions">
+      <a class="btn" href="deepseek_html_20251113_24f848.html">Back to Store</a>
+      <a class="btn" href="payment.html" style="background:#1f7a8c">Payment</a>
+      <button id="clearOrders" class="btn small" style="background:#ef4444">Clear All</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>Saved Orders</h2>
+    <div id="ordersList"></div>
+  </main>
+
+  <script>
+    // Admin-only guard: order list should only be visible to admin users.
+    const KEY = 'shop_orders';
+    function formatDate(iso){ try{ return new Date(iso).toLocaleString(); }catch(e){return iso} }
+    function loadOrders(){ try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ return []; } }
+
+    function getSessionUsername(){
+      try{
+        const url = new URL(window.location.href);
+        const qp = url.searchParams.get('session');
+        if(qp){ try{ sessionStorage.setItem('focusflow_session', qp); }catch(_){ } return qp; }
+      }catch(_){ }
+      try{ return sessionStorage.getItem('focusflow_session') || null; }catch(_){ return null; }
+    }
+
+    function isAdminUser(username){
+      if(!username) return false;
+      if(username === 'admin') return true;
+      try{
+        const users = JSON.parse(localStorage.getItem('focusflow_users')||'[]');
+        const u = users.find(x=> x && x.username === username);
+        return !!(u && (u.isAdmin === true));
+      }catch(e){ return false; }
+    }
+
+    // Render orders only if current session user is admin
+    (function(){
+      const user = getSessionUsername();
+      const root = document.getElementById('ordersList');
+      const clearBtn = document.getElementById('clearOrders');
+
+      if(!isAdminUser(user)){
+        // Not authorized: show friendly message and hide destructive controls
+        if(clearBtn) clearBtn.style.display = 'none';
+        root.innerHTML = '<div class="empty">Access denied — orders are visible to admin users only.<br><a href="deepseek_html_20251113_24f848.html">Back to store</a></div>';
+        return;
+      }
+
+      function render(){
+        const list = loadOrders();
+        if(!list || list.length===0){ root.innerHTML = '<div class="empty">No orders yet.</div>'; return }
+        const rows = list.map(o=>{
+          const items = (o.items||[]).map(it=>`${it.qty}× ${it.title} (₦${Number(it.price).toFixed(2)})`).join('<br>');
+          const payButton = o.status === 'paid' ? '<span style="color:green;font-weight:700;">Paid</span>'
+            : `<a href="payment.html?orderId=${encodeURIComponent(o.id)}" class="btn small" style="background:#3b82f6;">Pay Now</a>`;
+          return `<tr>
+            <td><strong>${o.id}</strong><div class="muted">${formatDate(o.createdAt)}</div></td>
+            <td>${items}</td>
+            <td>₦${Number(o.total).toFixed(2)}</td>
+            <td>${o.status||'pending'}</td>
+            <td>${payButton}</td>
+          </tr>`;
+        }).join('');
+        root.innerHTML = `<table><thead><tr><th>Order</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+      }
+
+      if(clearBtn) clearBtn.addEventListener('click', ()=>{
+        if(!confirm('Clear all saved orders from localStorage?')) return;
+        localStorage.removeItem(KEY);
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
