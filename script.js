@@ -289,40 +289,53 @@
         };
         FlutterwaveCheckout(config);
       } else if (method === 'paystack') {
+        // Check if Paystack script is loaded
         if (typeof PaystackPop === 'undefined') {
           showToast('Paystack is not loaded. Please refresh the page and try again.', 'error');
+          console.error('PaystackPop is undefined. Make sure the Paystack script is loaded.');
           return;
         }
+
         const total = currentOrder.items.reduce((sum, it) => sum + (it.qty * it.price), 0);
-        const handler = PaystackPop.setup({
-          key: 'pk_test_c106984910a8a14a88ff76abeaaae35c95d540cb', // Your Paystack public key
-          email: 'customer@example.com', // In real app, get from user data
-          amount: total * 100, // Paystack expects amount in kobo (multiply by 100)
-          currency: 'NGN',
-          ref: `shopEase-${orderId}-${Date.now()}`,
-          callback: function(response) {
-            console.log(response);
-            showToast('Payment successful via Paystack!', 'success');
-            paymentForm.reset();
-            updatePaymentMethodVisibility();
+        
+        try {
+          const handler = PaystackPop.setup({
+            key: 'pk_test_c106984910a8a14a88ff76abeaaae35c95d540cb', // Your Paystack public key
+            email: 'customer@example.com', // In real app, get from user data
+            amount: total * 100, // Paystack expects amount in kobo (multiply by 100)
+            currency: 'NGN',
+            ref: `shopEase-${orderId}-${Date.now()}`,
+            callback: function(response) {
+              console.log('Paystack payment response:', response);
+              showToast('Payment successful via Paystack!', 'success');
+              paymentForm.reset();
+              updatePaymentMethodVisibility();
 
-            const orders = JSON.parse(localStorage.getItem('shop_orders') || '[]');
-            const index = orders.findIndex(o => o.id === orderId);
-            if (index !== -1) {
-              orders[index].status = 'paid';
-              localStorage.setItem('shop_orders', JSON.stringify(orders));
+              const orders = JSON.parse(localStorage.getItem('shop_orders') || '[]');
+              const index = orders.findIndex(o => o.id === orderId);
+              if (index !== -1) {
+                orders[index].status = 'paid';
+                localStorage.setItem('shop_orders', JSON.stringify(orders));
+              }
+
+              // Redirect to dashboard page after successful payment
+              setTimeout(() => {
+                window.location.href = 'dashboard.html';
+              }, 2000);
+            },
+            onClose: function() {
+              showToast('Payment cancelled.', 'warning');
+              console.log('Paystack payment modal closed');
             }
-
-            // Redirect to dashboard page after successful payment
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 2000);
-          },
-          onClose: function() {
-            showToast('Payment cancelled.', 'warning');
-          }
-        });
-        handler.openIframe();
+          });
+          
+          // Open the Paystack payment modal
+          handler.openIframe();
+          console.log('Paystack payment modal opened');
+        } catch (error) {
+          console.error('Paystack error:', error);
+          showToast('Failed to initialize Paystack payment. Please try again.', 'error');
+        }
       } else {
         showToast('Selected payment method is not supported.', 'error');
       }
