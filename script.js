@@ -298,16 +298,33 @@
 
         const total = currentOrder.items.reduce((sum, it) => sum + (it.qty * it.price), 0);
         
+        // Validate amount
+        if (!total || total <= 0) {
+          showToast('Invalid order amount. Please check your order.', 'error');
+          return;
+        }
+
+        console.log('Initializing Paystack payment with amount:', total);
+        
         try {
-          const handler = PaystackPop.setup({
-            key: 'pk_test_c106984910a8a14a88ff76abeaaae35c95d540cb', // Your Paystack public key
-            email: 'customer@example.com', // In real app, get from user data
-            amount: total * 100, // Paystack expects amount in kobo (multiply by 100)
+          const paystackConfig = {
+            key: 'pk_test_c106984910a8a14a88ff76abeaaae35c95d540cb',
+            email: 'customer@example.com',
+            amount: Math.round(total * 100), // Paystack expects amount in kobo
             currency: 'NGN',
-            ref: `shopEase-${orderId}-${Date.now()}`,
+            ref: 'shopease-' + Math.floor((Math.random() * 1000000000) + 1),
+            metadata: {
+              custom_fields: [
+                {
+                  display_name: "Order ID",
+                  variable_name: "order_id",
+                  value: orderId
+                }
+              ]
+            },
             callback: function(response) {
-              console.log('Paystack payment response:', response);
-              showToast('Payment successful via Paystack!', 'success');
+              console.log('Paystack payment successful:', response);
+              showToast('Payment successful via Paystack! Reference: ' + response.reference, 'success');
               paymentForm.reset();
               updatePaymentMethodVisibility();
 
@@ -315,6 +332,7 @@
               const index = orders.findIndex(o => o.id === orderId);
               if (index !== -1) {
                 orders[index].status = 'paid';
+                orders[index].paymentReference = response.reference;
                 localStorage.setItem('shop_orders', JSON.stringify(orders));
               }
 
@@ -324,17 +342,27 @@
               }, 2000);
             },
             onClose: function() {
-              showToast('Payment cancelled.', 'warning');
-              console.log('Paystack payment modal closed');
+              showToast('Payment window closed.', 'warning');
+              console.log('Paystack payment modal closed by user');
             }
-          });
+          };
+
+          console.log('Paystack config:', paystackConfig);
+          
+          const handler = PaystackPop.setup(paystackConfig);
+          
+          if (!handler) {
+            throw new Error('Failed to create Paystack handler');
+          }
           
           // Open the Paystack payment modal
           handler.openIframe();
-          console.log('Paystack payment modal opened');
+          console.log('Paystack payment modal opened successfully');
+          
         } catch (error) {
-          console.error('Paystack error:', error);
-          showToast('Failed to initialize Paystack payment. Please try again.', 'error');
+          console.error('Paystack initialization error:', error);
+          console.error('Error details:', error.message, error.stack);
+          showToast('Failed to initialize Paystack payment: ' + error.message, 'error');
         }
       } else {
         showToast('Selected payment method is not supported.', 'error');
