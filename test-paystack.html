@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Paystack</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body>
+    <h1>Test Paystack Integration</h1>
+    <button id="testPaystack">Test Paystack Payment</button>
+    
+    <div id="status"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        // Check if Paystack loaded
+        window.addEventListener('load', function() {
+            if (typeof PaystackPop === 'undefined') {
+                statusDiv.innerHTML = '<p style="color: red;">❌ Paystack script failed to load</p>';
+                console.error('PaystackPop is undefined');
+            } else {
+                statusDiv.innerHTML = '<p style="color: green;">✅ Paystack script loaded successfully</p>';
+                console.log('PaystackPop is available:', PaystackPop);
+            }
+        });
+
+        document.getElementById('testPaystack').addEventListener('click', function() {
+            if (typeof PaystackPop === 'undefined') {
+                alert('Paystack is not loaded!');
+                return;
+            }
+
+            try {
+                const handler = PaystackPop.setup({
+                    key: 'pk_test_c106984910a8a14a88ff76abeaaae35c95d540cb',
+                    email: 'customer@example.com',
+                    amount: 10000, // 100 NGN in kobo
+                    currency: 'NGN',
+                    ref: 'test-' + Date.now(),
+                    callback: function(response) {
+                        alert('Payment successful! Reference: ' + response.reference);
+                        console.log('Payment response:', response);
+                    },
+                    onClose: function() {
+                        alert('Payment cancelled');
+                    }
+                });
+                
+                handler.openIframe();
+                console.log('Paystack modal opened');
+            } catch (error) {
+                console.error('Paystack error:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
