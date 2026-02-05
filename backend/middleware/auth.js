@@ -1,16 +1,25 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Validate required environment variables on module load
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables');
+}
+
+if (!process.env.JWT_REFRESH_SECRET) {
+  throw new Error('FATAL ERROR: JWT_REFRESH_SECRET is not defined in environment variables');
+}
+
 // Generate access token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '1h'
   });
 };
 
 // Generate refresh token
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key', {
+  return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d'
   });
 };
@@ -27,7 +36,7 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
     if (!user) {

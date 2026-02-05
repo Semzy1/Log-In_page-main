@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ShopEase — Multi-Category Online Store</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;">
     <style>
         :root{ 
             --primary:#1f7a8c; 
@@ -521,19 +521,127 @@
             .filters{gap:6px}
             .category{padding:6px 10px;font-size:0.9rem}
         }
+
+        /* Accessibility Improvements */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Screen reader only text */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Focus visible styles for keyboard navigation */
+        button:focus-visible, 
+        a:focus-visible, 
+        input:focus-visible,
+        select:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Keyboard accessible category buttons */
+        .category {
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Enhanced button focus for accessibility */
+        .icon-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] .icon-btn:focus-visible {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Improved link underline visibility */
+        a {
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
+
+        /* Product cards with better touch targets */
+        .card {
+            min-height: 280px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:focus-within {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .add-btn:focus-visible,
+        .buy-btn:focus-visible {
+            outline: 3px solid white;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: more) {
+            body {
+                font-weight: 600;
+            }
+            header {
+                border-bottom: 2px solid var(--text);
+            }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="brand"><i class="fas fa-store"></i><span>ShopEase</span></div>
-        <div class="search"><input id="searchInput" placeholder="Search products, electronics, fashion..." /></div>
-        <div class="actions">
-            <button class="icon-btn" id="themeToggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
-            <button class="icon-btn" id="wishlistBtn" title="Wishlist"><i class="fas fa-heart"></i> <span id="wishlistCount" class="cart-bubble" style="display:none">0</span></button>
-            <a class="icon-btn" id="ordersBtn" href="orders.html" title="Orders" style="display:none"><i class="fas fa-list"></i></a>
-            <button class="icon-btn" id="cartBtn" title="Shopping cart"><i class="fas fa-shopping-cart"></i> <span id="cartCount" class="cart-bubble">0</span></button>
-
+    <a href="#productsGrid" class="skip-link">Skip to main content</a>
+    <header role="banner" aria-label="ShopEase store navigation">
+        <a href="#" class="brand" aria-label="ShopEase home"><i class="fas fa-store" aria-hidden="true"></i><span>ShopEase</span></a>
+        <div class="search">
+            <label for="searchInput" class="sr-only">Search products</label>
+            <input id="searchInput" placeholder="Search products, electronics, fashion..." aria-label="Product search" />
         </div>
+        <nav class="actions" role="navigation" aria-label="Utility menu">
+            <button class="icon-btn" id="themeToggle" aria-label="Toggle dark/light theme" aria-pressed="false"><i class="fas fa-moon" aria-hidden="true"></i></button>
+            <button class="icon-btn" id="wishlistBtn" aria-label="Wishlist" aria-pressed="false"><i class="fas fa-heart" aria-hidden="true"></i> <span id="wishlistCount" class="cart-bubble" style="display:none" aria-live="polite">0</span></button>
+            <a class="icon-btn" id="ordersBtn" href="orders.html" aria-label="Orders" style="display:none"><i class="fas fa-list" aria-hidden="true"></i></a>
+            <button class="icon-btn" id="cartBtn" aria-label="Shopping cart" aria-expanded="false" aria-controls="cartDrawer"><i class="fas fa-shopping-cart" aria-hidden="true"></i> <span id="cartCount" class="cart-bubble" aria-live="polite">0</span></button>
+        </nav>
     </header>
 
     <main class="container">
@@ -546,33 +654,34 @@
             </div>
         </div>
 
-        <div class="filters">
-            <div class="category active" data-cat="all">All Products</div>
-            <div class="category" data-cat="electronics">Electronics</div>
-            <div class="category" data-cat="fashion">Fashion</div>
-            <div class="category" data-cat="home">Home & Kitchen</div>
-            <div class="category" data-cat="sports">Sports & Outdoors</div>
-            <div class="category" data-cat="beauty">Beauty & Health</div>
-            <div class="category" data-cat="toys">Toys & Games</div>
-            <div class="category" data-cat="automotive">Automotive</div>
-            <select id="brandFilter" class="brand-select">
+        <nav class="filters" role="navigation" aria-label="Product categories">
+            <div class="category active" data-cat="all" role="button" tabindex="0" aria-pressed="true">All Products</div>
+            <div class="category" data-cat="electronics" role="button" tabindex="0" aria-pressed="false">Electronics</div>
+            <div class="category" data-cat="fashion" role="button" tabindex="0" aria-pressed="false">Fashion</div>
+            <div class="category" data-cat="home" role="button" tabindex="0" aria-pressed="false">Home & Kitchen</div>
+            <div class="category" data-cat="sports" role="button" tabindex="0" aria-pressed="false">Sports & Outdoors</div>
+            <div class="category" data-cat="beauty" role="button" tabindex="0" aria-pressed="false">Beauty & Health</div>
+            <div class="category" data-cat="toys" role="button" tabindex="0" aria-pressed="false">Toys & Games</div>
+            <div class="category" data-cat="automotive" role="button" tabindex="0" aria-pressed="false">Automotive</div>
+            <label for="brandFilter" class="sr-only">Filter by brand</label>
+            <select id="brandFilter" class="brand-select" aria-label="Filter products by brand">
                 <option value="">All Brands</option>
             </select>
-        </div>
+        </nav>
 
-        <section id="productsGrid">
+        <section id="productsGrid" class="products-grid" role="region" aria-label="Available products" aria-live="polite">
             <!-- Products will be inserted here by category -->
         </section>
     </main>
-    <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
-        <h3>Your Cart</h3>
-        <div id="cartItems"></div>
-        <div class="checkout" style="display: flex; gap: 10px; align-items: center;">
-            <strong id="cartTotal">₦0.00</strong>
-            <button id="checkoutBtn" class="add-btn" style="flex: 1;">Checkout</button>
-            <button id="payNowBtn" class="add-btn" style="flex: 1; background-color: #3b82f6;">Pay Now</button>
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart" aria-hidden="true" role="region">
+        <h2>Your Cart</h2>
+        <div id="cartItems" role="list" aria-label="Items in cart"></div>
+        <div class="checkout" style="display: flex; gap: 10px; align-items: center;" role="group" aria-label="Checkout options">
+            <strong id="cartTotal" aria-label="Cart total">₦0.00</strong>
+            <button id="checkoutBtn" class="add-btn" style="flex: 1;" aria-label="Proceed to checkout">Checkout</button>
+            <button id="payNowBtn" class="add-btn" style="flex: 1; background-color: #3b82f6;" aria-label="Pay now">Pay Now</button>
         </div>
-    </div>
+    </aside>
 
     <!-- Payment Section Modal -->
     <div id="payment-modal" class="modal-backdrop hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
@@ -604,7 +713,7 @@
     <footer>© 2025 ShopEase — Multi-category online store. Payments and orders are simulated.</footer>
 
     <!-- Toast notification container -->
-    <div id="toastContainer"></div>
+    <div id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Order confirmation modal -->
     <div id="order-confirmation" class="modal-backdrop hidden">
@@ -623,78 +732,12 @@
     </div>
 
     <script>
+        // Load shared product dataset
+    </script>
+    <script src="assets/js/products.js"></script>
+    <script>
         // Enhanced ShopEase Storefront with Multiple Categories
-        const PRODUCTS = [
-            // Electronics
-            {id:'e1',title:'iPhone 15 Pro',cat:'electronics',price:899999.99,img:'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=800&q=60',description:'Latest Apple smartphone with advanced camera system'},
-            {id:'e2',title:'Samsung Galaxy S24',cat:'electronics',price:749999.99,img:'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=60',description:'Powerful Android phone with stunning display'},
-            {id:'e3',title:'MacBook Pro 16"',cat:'electronics',price:2499999.99,img:'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=800&q=60',description:'Professional laptop for creative work'},
-            {id:'e4',title:'Sony WH-1000XM5',cat:'electronics',price:59999.99,img:'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=60',description:'Noise-canceling wireless headphones'},
-            {id:'e5',title:'iPad Air',cat:'electronics',price:699999.99,img:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=60',description:'Versatile tablet for work and entertainment'},
-            {id:'e6',title:'PlayStation 5',cat:'electronics',price:499999.99,img:'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=60',description:'Next-gen gaming console'},
-            {id:'e7',title:'Apple Watch Series 9',cat:'electronics',price:149999.99,img:'assets/images/Apple Watch Series 9.jpg',description:'Advanced smartwatch with health monitoring'},
-            {id:'e8',title:'Dell XPS 13',cat:'electronics',price:1299999.99,img:'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?auto=format&fit=crop&w=800&q=60',description:'Compact laptop with powerful performance'},
-            
-            // Fashion
-            {id:'f1',title:'Nike Air Jordan 1',cat:'fashion',price:79999.99,img:'assets/images/Nike sneakers jordan.webp',description:'Classic basketball sneakers'},
-            {id:'f2',title:'Levi\'s 501 Jeans',cat:'fashion',price:8999.99,img:'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=60',description:'Original fit denim jeans'},
-            {id:'f3',title:'Adidas Ultraboost',cat:'fashion',price:24999.99,img:'assets/images/sneakers.jpg',description:'Comfortable running shoes'},
-            {id:'f4',title:'Ray-Ban Aviator',cat:'fashion',price:15999.99,img:'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=60',description:'Classic sunglasses with UV protection'},
-            {id:'f5',title:'Zara Blazer',cat:'fashion',price:22999.99,img:'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=60',description:'Elegant formal blazer for office wear'},
-            {id:'f6',title:'H&M Summer Dress',cat:'fashion',price:12999.99,img:'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=60',description:'Lightweight floral print dress'},
-            {id:'f7',title:'Gucci Handbag',cat:'fashion',price:299999.99,img:'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=60',description:'Luxury leather handbag'},
-            {id:'f8',title:'Rolex Submariner',cat:'fashion',price:8999999.99,img:'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=800&q=60',description:'Iconic luxury diving watch'},
-            
-            // Home & Kitchen
-            {id:'h1',title:'KitchenAid Mixer',cat:'home',price:59999.99,img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=800&q=60',description:'Professional stand mixer for baking'},
-            {id:'h2',title:'Dyson V11 Vacuum',cat:'home',price:89999.99,img:'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60',description:'Cordless vacuum with powerful suction'},
-            {id:'h3',title:'Instant Pot Duo',cat:'home',price:15999.99,img:'https://images.unsplash.com/photo-1565402170291-8491f14678db?auto=format&fit=crop&w=800&q=60',description:'7-in-1 multi-functional pressure cooker'},
-            {id:'h4',title:'Nespresso Machine',cat:'home',price:29999.99,img:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=60',description:'Compact coffee maker for espresso lovers'},
-            {id:'h5',title:'Memory Foam Mattress',cat:'home',price:129999.99,img:'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=60',description:'Queen size mattress for better sleep'},
-            {id:'h6',title:'Non-Stick Cookware Set',cat:'home',price:24999.99,img:'https://images.unsplash.com/photo-1556909114-4d0d853e5e25?auto=format&fit=crop&w=800&q=60',description:'10-piece kitchen cookware set'},
-            {id:'h7',title:'Smart LED TV 55"',cat:'home',price:149999.99,img:'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=60',description:'4K Ultra HD Smart Television'},
-            {id:'h8',title:'Air Purifier',cat:'home',price:19999.99,img:'https://images.unsplash.com/photo-1587334984005-5eb1c96b1a2c?auto=format&fit=crop&w=800&q=60',description:'HEPA filter for clean indoor air'},
-            
-            // Sports & Outdoors
-            {id:'s1',title:'Yoga Mat Premium',cat:'sports',price:4999.99,img:'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=60',description:'Non-slip exercise mat for yoga and fitness'},
-            {id:'s2',title:'Wilson Tennis Racket',cat:'sports',price:12999.99,img:'assets/images/Wilson Tennis Racket.jpg',description:'Professional tennis racket for advanced players'},
-            {id:'s3',title:'Bicycle Mountain Bike',cat:'sports',price:89999.99,img:'assets/images/Bicycle Mountain Bike.jpg',description:'21-speed mountain bike for trails'},
-            {id:'s4',title:'Nike Football',cat:'sports',price:5999.99,img:'https://images.unsplash.com/photo-1614632537197-38a17061c2bd?auto=format&fit=crop&w=800&q=60',description:'Official match football'},
-            {id:'s5',title:'Fitness Tracker',cat:'sports',price:8999.99,img:'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=800&q=60',description:'Activity tracker with heart rate monitor'},
-            {id:'s6',title:'Camping Tent 4-Person',cat:'sports',price:29999.99,img:'https://images.unsplash.com/photo-1504851149312-7a075b496cc7?auto=format&fit=crop&w=800&q=60',description:'Waterproof tent for outdoor adventures'},
-            {id:'s7',title:'Dumbbell Set 20kg',cat:'sports',price:14999.99,img:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=60',description:'Adjustable weight dumbbells for home gym'},
-            {id:'s8',title:'Running Shoes',cat:'sports',price:12999.99,img:'assets/images/sport cap.jpeg',description:'Lightweight running shoes with cushioning'},
-            
-            // Beauty & Health
-            {id:'b1',title:'Dyson Hair Dryer',cat:'beauty',price:49999.99,img:'assets/images/Dyson Hair Dryer.jpg',description:'Professional hair dryer with intelligent heat control'},
-            {id:'b2',title:'Oral-B Electric Toothbrush',cat:'beauty',price:12999.99,img:'assets/images/Oral-B Electric Toothbrush.jpg',description:'Smart electric toothbrush with app connectivity'},
-            {id:'b3',title:'L\'Oreal Skincare Set',cat:'beauty',price:8999.99,img:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=800&q=60',description:'Complete skincare routine products'},
-            {id:'b4',title:'Philips Shaver',cat:'beauty',price:17999.99,img:'assets/images/Philips Shaver.jpg',description:'Electric shaver for smooth shaving'},
-            {id:'b5',title:'Weight Scale Smart',cat:'beauty',price:6999.99,img:'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=800&q=60',description:'Digital scale with body composition analysis'},
-            {id:'b6',title:'Hair Straightener',cat:'beauty',price:11999.99,img:'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=60',description:'Professional ceramic flat iron'},
-            {id:'b7',title:'Perfume Gift Set',cat:'beauty',price:14999.99,img:'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=800&q=60',description:'Luxury fragrance collection'},
-            {id:'b8',title:'Makeup Brush Set',cat:'beauty',price:5999.99,img:'assets/images/Makeup Brush Set.jpg',description:'Professional makeup brushes'},
-            
-            // Toys & Games
-            {id:'t1',title:'LEGO Star Wars Set',cat:'toys',price:12999.99,img:'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=60',description:'Millennium Falcon building kit'},
-            {id:'t2',title:'Nintendo Switch',cat:'toys',price:39999.99,img:'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=800&q=60',description:'Hybrid gaming console'},
-            {id:'t3',title:'Barbie Dreamhouse',cat:'toys',price:19999.99,img:'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=60',description:'3-story dollhouse with accessories'},
-            {id:'t4',title:'Board Game Collection',cat:'toys',price:8999.99,img:'https://images.unsplash.com/photo-1632501641765-e568d28b001b?auto=format&fit=crop&w=800&q=60',description:'Family games including Monopoly and Scrabble'},
-            {id:'t5',title:'Remote Control Car',cat:'toys',price:5999.99,img:'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?auto=format&fit=crop&w=800&q=60',description:'High-speed RC car with rechargeable battery'},
-            {id:'t6',title:'Jigsaw Puzzle 1000pc',cat:'toys',price:2999.99,img:'https://images.unsplash.com/photo-1618897992764-6c7f3685c17c?auto=format&fit=crop&w=800&q=60',description:'Landscape puzzle for adults and kids'},
-            {id:'t7',title:'Drone with Camera',cat:'toys',price:49999.99,img:'https://images.unsplash.com/photo-1579829366248-204fe8413f31?auto=format&fit=crop&w=800&q=60',description:'4K camera drone with GPS'},
-            {id:'t8',title:'Play-Doh 10-Pack',cat:'toys',price:1999.99,img:'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=60',description:'Modeling compound for creative play'},
-            
-            // Automotive
-            {id:'a1',title:'Car Phone Holder',cat:'automotive',price:2999.99,img:'assets/images/Car Phone Holder.jpg',description:'Dashboard mount for smartphones'},
-            {id:'a2',title:'Jump Starter Power Bank',cat:'automotive',price:12999.99,img:'assets/images/Jump Starter Power Bank.jpg',description:'Portable car battery jump starter'},
-            {id:'a3',title:'Car Vacuum Cleaner',cat:'automotive',price:7999.99,img:'assets/images/Car Vacuum Cleaner.jpg',description:'Cordless vacuum for car interior'},
-            {id:'a4',title:'Dash Cam Front & Rear',cat:'automotive',price:24999.99,img:'assets/images/Dash Cam Front & Rear.jpg',description:'Dual channel driving recorder'},
-            {id:'a5',title:'Car Seat Covers',cat:'automotive',price:14999.99,img:'assets/images/Car Seat Covers.jpg',description:'Universal fit neoprene seat protection'},
-            {id:'a6',title:'Tire Inflator',cat:'automotive',price:8999.99,img:'assets/images/Tire Inflator.jpg',description:'Digital air compressor for car tires'},
-            {id:'a7',title:'Car Wax Kit',cat:'automotive',price:5999.99,img:'assets/images/Car Wax Kit.jpg',description:'Professional car polishing and waxing'},
-            {id:'a8',title:'LED Headlight Bulbs',cat:'automotive',price:12999.99,img:'assets/images/LED Headlight Bulbs.jpg',description:'Bright white headlight replacement bulbs'}
-        ];
+        // Product data is now loaded from a shared file: assets/js/products.js
 
         // Enhanced cart management with toast notifications
         function loadCart(){ 
@@ -921,6 +964,17 @@
             
             productsGrid.innerHTML = output;
             
+            // Keyboard accessibility for category buttons
+            document.querySelectorAll('.category[role="button"]').forEach((btn) => {
+                // Arrow key navigation between categories
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        btn.click();
+                    }
+                });
+            });
+            
             // Add event listeners
             document.querySelectorAll('.add-btn[data-id]').forEach(b => b.addEventListener('click', () => addToCart(b.dataset.id)));
             document.querySelectorAll('.wishlist-btn').forEach(b => b.addEventListener('click', (e) => {
@@ -953,18 +1007,18 @@
         function renderProductCard(product) {
             const isInWishlist = WISHLIST.includes(product.id);
             return `
-                <div class="card" data-id="${product.id}">
-                    <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" data-id="${product.id}" title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
-                        <i class="fas fa-heart"></i>
+                <article class="card" data-id="${product.id}" role="region" aria-label="${product.title} product card">
+                    <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" data-id="${product.id}" aria-label="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}" aria-pressed="${isInWishlist}">
+                        <i class="fas fa-heart" aria-hidden="true"></i>
                     </button>
-                    <img src="${product.img}" alt="${product.title}" onerror="this.src='https://via.placeholder.com/400x300?text=Product+Image'">
+                    <img loading="lazy" src="${product.img}" alt="${product.title} product image" onerror="this.src='https://via.placeholder.com/400x300?text=Product+Image'">
                     <h3>${product.title}</h3>
                     <div class="description">${product.description}</div>
                     <div class="price-row">
-                        <div class="price">₦${product.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
-                        <button class="add-btn" data-id="${product.id}">Add to Cart</button>
+                        <div class="price" aria-label="Price: ₦${product.price.toLocaleString('en-US', {minimumFractionDigits: 2})}">₦${product.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                        <button class="add-btn" data-id="${product.id}" aria-label="Add ${product.title} to cart">Add to Cart</button>
                     </div>
-                </div>
+                </article>
             `;
         }
 
@@ -995,7 +1049,7 @@
                 <div class="modal-content" style="max-width: 800px; text-align: left;">
                     <button class="welcome-close" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <img src="${product.img}" alt="${product.title}" style="width: 100%; border-radius: 8px;">
+                        <img loading="lazy" src="${product.img}" alt="${product.title}" style="width: 100%; border-radius: 8px;">
                         <div>
                             <h2 style="margin-top: 0;">${product.title}</h2>
                             <p style="color: var(--muted);">${product.description}</p>
@@ -1083,7 +1137,7 @@
                     const node = document.createElement('div'); 
                     node.className='cart-item'; 
                     node.innerHTML = `
-                        <img src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
+                            <img loading="lazy" src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
                         <div style="flex:1">
                             <div>${p.title}</div>
                             <div style="color:var(--muted)">₦${p.price.toFixed(2)}</div>
@@ -1486,7 +1540,7 @@
                                 <button class="wishlist-btn active" data-id="${p.id}" title="Remove from wishlist" onclick="toggleWishlist('${p.id}'); this.closest('.card').remove(); if(!document.querySelectorAll('.card').length) this.closest('.modal-backdrop').remove();">
                                     <i class="fas fa-heart"></i>
                                 </button>
-                                <img src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/400x300?text=Product+Image'">
+                                <img loading="lazy" src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/400x300?text=Product+Image'">
                                 <h3>${p.title}</h3>
                                 <div class="description">${p.description}</div>
                                 <div class="price-row">
@@ -1503,11 +1557,49 @@
         });
 
         // Initialize the application
+        function getQueryParam(name){ try{ const url = new URL(window.location.href); return url.searchParams.get(name); }catch(_){ return null; } }
+
+        // Respect ?cat=category, ?q=search, ?brand=brand and optional ?product=id
+        const initialCat = (function(){ const c = getQueryParam('cat'); return c ? c : 'all'; })();
+        const initialQuery = getQueryParam('q') || '';
+        const initialBrand = getQueryParam('brand') || '';
+        const initialProduct = getQueryParam('product') || null;
+
+        // Set active category button (if exists)
+        if(initialCat && initialCat !== 'all'){
+            const el = document.querySelector(`.category[data-cat="${initialCat}"]`);
+            if(el){ document.querySelectorAll('.category').forEach(x=> x.classList.remove('active')); el.classList.add('active'); }
+        }
+
         populateBrandFilter();
-        renderProducts();
+        renderProducts(initialCat, initialQuery, initialBrand);
         renderCart();
         updateWishlistButton();
+
+        // Add keyboard navigation for category buttons
+        function setupCategoryKeyboardNav() {
+            const categories = document.querySelectorAll('.category[role="button"]');
+            categories.forEach((btn, index) => {
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        btn.click();
+                    } else if (e.key === 'ArrowRight' && index < categories.length - 1) {
+                        e.preventDefault();
+                        categories[index + 1].focus();
+                    } else if (e.key === 'ArrowLeft' && index > 0) {
+                        e.preventDefault();
+                        categories[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        setupCategoryKeyboardNav();
+
+        // If a product id was passed in the URL, open its detail modal after render
+        if(initialProduct){ setTimeout(()=>{ try{ const p = PRODUCTS.find(x=>x.id===initialProduct); if(p) showProductDetail(initialProduct); }catch(_){ } }, 300); }
     </script>
-    <script src="security.js"></script>
+    <script src="security.js" defer></script>
 </body>
 </html>

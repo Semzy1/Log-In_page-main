@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Products</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body{font-family:Inter,Arial;margin:0;padding:20px;background:#f7fafc;color:#0f172a}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.04);display:flex;gap:12px;align-items:center}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+    .thumb{width:80px;height:56px;object-fit:cover;border-radius:8px}
+    .toggle{margin-left:auto}
+    button{cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin — Products</h1>
+    <div>
+      <button id="back" onclick="location.href='admin-login.html'">Back</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="status" style="margin-bottom:12px;color:var(--muted)"></div>
+    <div style="margin-bottom:12px"><button id="refresh">Refresh List</button></div>
+    <div id="products" class="grid"></div>
+  </main>
+
+  <script src="assets/js/products.js"></script>
+  <script>
+    // Simple admin products UI: toggle featured flag via API (if admin) or local override
+    const status = document.getElementById('status');
+    const productsEl = document.getElementById('products');
+
+    function isAdminSession(){ try{ return sessionStorage.getItem('focusflow_session') === 'admin'; }catch(e){ return false; } }
+
+    function loadOverrides(){ try{ return JSON.parse(localStorage.getItem('focusflow_featured_overrides')||'{}'); }catch(e){ return {}; } }
+    function saveOverrides(o){ try{ localStorage.setItem('focusflow_featured_overrides', JSON.stringify(o)); }catch(e){} }
+
+    async function fetchProducts(){
+      // try backend first
+      try{
+        const resp = await fetch('/api/products?limit=200');
+        if(resp.ok){ const j = await resp.json(); if(j && j.success){ return j.data.products; } }
+      }catch(e){}
+      // fallback to client PRODUCTS list
+      return (window.PRODUCTS || []);
+    }
+
+    function renderList(list){
+      const overrides = loadOverrides();
+      productsEl.innerHTML = list.map(p => `
+        <div class="card" data-id="${p._id || p.id}">
+          <img class="thumb" src="${(p.images && p.images[0] && p.images[0].url) || p.img || 'https://via.placeholder.com/80x56?text=Img'}" alt="${p.title}">
+          <div>
+            <div style="font-weight:700">${p.title}</div>
+            <div style="color:var(--muted)">₦${(p.price||0).toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" data-id="${p._id || p.id}" ${ (p.featured || overrides[(p._id || p.id)]) ? 'checked' : '' } /> Featured</label>
+          </div>
+        </div>
+      `).join('');
+
+      // hook up toggles
+      productsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', async (e)=>{
+          const id = e.currentTarget.dataset.id;
+          const checked = e.currentTarget.checked;
+          status.textContent = 'Updating...';
+          // attempt server update if admin session
+          if(isAdminSession()){
+            try{
+              const res = await fetch('/api/products/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ featured: checked }) });
+              if(res.ok){
+                // server is source-of-truth: clear any local override for this id
+                const ov = loadOverrides(); if(ov && ov[id] !== undefined){ delete ov[id]; saveOverrides(ov); }
+                status.textContent = 'Updated on server'; applyLocalUpdate(id, checked); return;
+              }
+            }catch(err){ console.warn('Server update failed', err); }
+          }
+          // fallback: store override in localStorage and update PRODUCTS array
+          const ov = loadOverrides(); ov[id] = checked; saveOverrides(ov); applyLocalUpdate(id, checked); status.textContent = 'Updated locally';
+        });
+      });
+    }
+
+    function applyLocalUpdate(id, checked){
+      try{ // update in-memory PRODUCTS if present
+        if(window.PRODUCTS){
+          const p = window.PRODUCTS.find(x => x.id === id || x._id === id);
+          if(p) p.featured = checked;
+        }
+      }catch(e){}
+    }
+
+    async function loadAndRender(){
+      status.textContent = 'Loading products...';
+      const list = await fetchProducts();
+      status.textContent = '';
+      renderList(list);
+    }
+
+    document.getElementById('refresh').addEventListener('click', loadAndRender);
+
+    // Guard: require admin session
+    if(!isAdminSession()){ status.textContent = 'Access denied. Please log in as admin.'; productsEl.innerHTML = ''; } else { loadAndRender(); }
+  </script>
+  <script src="security.js"></script>
+</body>
+</html>

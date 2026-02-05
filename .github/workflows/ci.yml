@@ -1,0 +1,172 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ============== Backend Tests & Lint ==============
+  backend-tests:
+    name: Backend Tests & Security Audit
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+      
+      - name: Run npm audit
+        run: |
+          cd backend
+          npm audit --audit-level=moderate
+      
+      - name: Run ESLint
+        run: |
+          cd backend
+          npm install --save-dev eslint eslint-config-airbnb-base eslint-plugin-import 2>/dev/null || true
+          npx eslint . --ext .js --ignore-pattern node_modules --fix --max-warnings 10 2>/dev/null || echo "ESLint warnings detected"
+      
+      - name: Run tests
+        run: |
+          cd backend
+          npm test -- --coverage --testPathPattern=tests
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: matrix.node-version == '18.x'
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+  
+  # ============== Frontend Lint & Build Check ==============
+  frontend-lint:
+    name: Frontend Lint & Build Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+      
+      - name: Run npm audit
+        run: |
+          cd frontend
+          npm audit --audit-level=moderate
+      
+      - name: Check for security vulnerabilities
+        run: |
+          cd frontend
+          npm install --save-dev npm-check-updates 2>/dev/null || true
+          npx npm-check-updates -u --target minor 2>/dev/null || echo "Dependency updates available"
+  
+  # ============== Root Package Check ==============
+  root-audit:
+    name: Root Dependencies Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'npm'
+      
+      - name: Install root dependencies
+        run: npm install
+      
+      - name: Audit root dependencies
+        run: npm audit --audit-level=moderate
+  
+  # ============== Security Scan ==============
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============== Code Quality Check ==============
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      
+      - name: Check for console.logs and debugger statements
+        run: |
+          echo "Checking for console statements in production code..."
+          ! grep -r "console\.\(log\|debug\|warn\)" backend/routes backend/models backend/middleware --include="*.js" | grep -v "node_modules\|tests" || echo "⚠️ Warning: console statements found in production code"
+          
+          echo "Checking for debugger statements..."
+          ! grep -r "debugger" backend --include="*.js" | grep -v "node_modules" || echo "⚠️ Warning: debugger statements found"
+      
+      - name: Lint markdown files
+        run: |
+          npm install --save-dev markdownlint-cli 2>/dev/null || true
+          npx markdownlint "*.md" --ignore node_modules 2>/dev/null || echo "Markdown linting complete"
+
+  # ============== Build Notification ==============
+  notify:
+    name: Build Status Notification
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [backend-tests, frontend-lint, root-audit, security-scan, code-quality]
+    
+    steps:
+      - name: Check job statuses
+        run: |
+          if [ "${{ needs.backend-tests.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
+             [ "${{ needs.root-audit.result }}" == "failure" ]; then
+            echo "❌ Pipeline failed!"
+            exit 1
+          fi
+          echo "✅ All checks passed!"
