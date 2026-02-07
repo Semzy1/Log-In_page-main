@@ -1,14 +1,27 @@
 // Setup file for Jest - runs before all tests
 
-// Suppress console logs during tests unless explicitly checking them
+// Set environment variables for testing BEFORE any modules load
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.JWT_REFRESH_SECRET = 'test-jwt-refresh-secret-key';
+process.env.MONGODB_URI = 'mongodb://localhost:27017/shopease-test';
+process.env.EMAIL_USER = 'test@example.com';
+process.env.EMAIL_PASS = 'test-password';
+process.env.NOTIFY_EMAIL = 'admin@example.com';
+process.env.PORT = '5001';
+
+// Suppress console logs during tests
 const originalLog = console.log;
 const originalWarn = console.warn;
 
 beforeAll(() => {
-  // You can customize console output here if needed
-  // For now, we'll let logs through for debugging
+  // Optionally suppress verbose logs during tests
+  // console.log = jest.fn();
+  // console.warn = jest.fn();
 });
 
 afterAll(() => {
-  // Cleanup
+  // Restore logs
+  console.log = originalLog;
+  console.warn = originalWarn;
 });
