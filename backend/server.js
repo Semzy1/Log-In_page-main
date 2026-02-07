@@ -10,8 +10,14 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+const allowedOrigins = config.isDevelopment
+  ? ['http://localhost:3000', 'http://localhost:5173']
+  : [config.frontendUrlProd];
 app.use(cors({
-  origin: config.isDevelopment ? '*' : config.frontendUrlProd,
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -55,7 +61,7 @@ app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Database connection
 mongoose.connect(config.mongodbUri, {
@@ -104,7 +110,11 @@ const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`ShopEase API server running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
-  console.log(`Database: ${config.mongodbUri.split('/').pop()}`);
+  if (config.isDevelopment) {
+    console.log(`Database: ${config.mongodbUri}`);
+  } else {
+    console.log('Database: [redacted]');
+  }
 });
 
 module.exports = app;

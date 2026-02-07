@@ -171,7 +171,13 @@ router.post('/refresh', [
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key');
+    if (!process.env.JWT_REFRESH_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server misconfiguration'
+      });
+    }
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.userId);
 
     if (!user || user.refreshToken !== refreshToken) {
