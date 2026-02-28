@@ -27,6 +27,7 @@
     <div style="margin-left:auto" class="actions">
       <a class="btn" href="deepseek_html_20251113_24f848.html">Back to Store</a>
       <a class="btn" href="payment.html" style="background:#1f7a8c">Payment</a>
+      <a id="manageProducts" class="btn" href="admin-products.html" style="display:none;background:#10b981">Manage Products</a>
       <button id="clearOrders" class="btn small" style="background:#ef4444">Clear All</button>
     </div>
   </header>
@@ -66,13 +67,18 @@
       const user = getSessionUsername();
       const root = document.getElementById('ordersList');
       const clearBtn = document.getElementById('clearOrders');
+      const manageBtn = document.getElementById('manageProducts');
 
       if(!isAdminUser(user)){
         // Not authorized: show friendly message and hide destructive controls
         if(clearBtn) clearBtn.style.display = 'none';
+        if(manageBtn) manageBtn.style.display = 'none';
         root.innerHTML = '<div class="empty">Access denied — orders are visible to admin users only.<br><a href="deepseek_html_20251113_24f848.html">Back to store</a></div>';
         return;
       }
+
+      // Show manage products link if admin
+      if(manageBtn) manageBtn.style.display = isAdminUser(user) ? 'inline-block' : 'none';
 
       function render(){
         const list = loadOrders();

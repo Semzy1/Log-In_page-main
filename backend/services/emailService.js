@@ -1,7 +1,8 @@
 const nodemailer = require('nodemailer');
 
 // Create transporter
-const transporter = nodemailer.createTransporter({
+// nodemailer API uses createTransport (not createTransporter)
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
@@ -9,11 +10,14 @@ const transporter = nodemailer.createTransporter({
   }
 });
 
+// Notification recipient (env override)
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'soluwasemiloba@gmail.com';
+
 // Send order notification email
 const sendOrderNotification = async (order, user) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'Soluwasemiloba@gmail.com',
+    to: NOTIFY_EMAIL,
     subject: `New Order Received - ${order.orderId}`,
     html: `
       <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">

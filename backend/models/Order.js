@@ -209,4 +209,61 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
+// Instance method to update order status
+orderSchema.methods.updateStatus = function(newStatus, trackingNumber = null) {
+  const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+  
+  if (!validStatuses.includes(newStatus)) {
+    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  // Validate status transitions
+  const currentStatusIndex = validStatuses.indexOf(this.status);
+  const newStatusIndex = validStatuses.indexOf(newStatus);
+
+  // Allow backwards transition only for cancellation
+  if (newStatus === 'cancelled') {
+    if (this.status === 'delivered') {
+      throw new Error('Cannot cancel a delivered order');
+    }
+  } else if (newStatusIndex < currentStatusIndex) {
+    throw new Error(`Cannot transition from ${this.status} to ${newStatus}`);
+  }
+
+  this.status = newStatus;
+
+  if (trackingNumber) {
+    this.trackingNumber = trackingNumber;
+  }
+
+  return this.save();
+};
+
+// Instance method to cancel order
+orderSchema.methods.cancelOrder = function(reason = '') {
+  if (this.status === 'cancelled') {
+    throw new Error('Order is already cancelled');
+  }
+
+  if (this.status === 'delivered') {
+    throw new Error('Cannot cancel a delivered order');
+  }
+
+  this.status = 'cancelled';
+  this.cancellationReason = reason;
+  this.cancelledAt = new Date();
+
+  return this.save();
+};
+
+// Instance method to check if order is refundable
+orderSchema.methods.isRefundable = function() {
+  return ['pending', 'processing', 'shipped', 'cancelled'].includes(this.status);
+};
+
+// Method to calculate total with all fees
+orderSchema.methods.getTotal = function() {
+  return this.pricing.subtotal + this.pricing.tax + this.pricing.shipping;
+};
+
 module.exports = mongoose.model('Order', orderSchema);

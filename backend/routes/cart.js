@@ -70,10 +70,10 @@ router.get('/', authenticate, async (req, res) => {
       data: {
         items: validCartItems,
         summary: {
-          subtotal: subtotal.toFixed(2),
-          tax: tax.toFixed(2),
-          shipping: shipping.toFixed(2),
-          total: total.toFixed(2),
+          subtotal: Math.round(subtotal * 100) / 100,
+          tax: Math.round(tax * 100) / 100,
+          shipping,
+          total: Math.round(total * 100) / 100,
           totalItems
         }
       }

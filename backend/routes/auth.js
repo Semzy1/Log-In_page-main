@@ -1,8 +1,7 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const { authenticate, generateToken, generateRefreshToken } = require('../middleware/auth');
+const { authenticate, generateToken, generateRefreshToken, verifyRefreshToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -58,18 +57,13 @@ router.post('/register', [
       });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
+    // Create user - password will be hashed in pre-save middleware
     const user = new User({
       username,
       email,
-      password: hashedPassword,
+      password, // Will be hashed by model
       firstName,
-      lastName,
-      name: `${firstName} ${lastName}`
+      lastName
     });
 
     await user.save();
@@ -89,9 +83,7 @@ router.post('/register', [
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      name: user.name,
       isAdmin: user.isAdmin,
-      status: user.status,
       createdAt: user.createdAt
     };
 
@@ -108,7 +100,8 @@ router.post('/register', [
     console.error('Registration error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration'
+      message: 'Server error during registration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -137,8 +130,8 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email and include password field
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
       return res.status(401).json({
@@ -168,13 +161,15 @@ router.post('/login', [
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Save refresh token
+    // Save refresh token and update last login
     user.refreshToken = refreshToken;
+    user.lastLogin = new Date();
     await user.save();
 
     // Return user data
     const userResponse = {
       _id: user._id,
+      username: user.username,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -219,8 +214,17 @@ router.post('/refresh', [
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key');
-    const user = await User.findById(decoded.userId);
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
+    const user = await User.findById(decoded.userId).select('+refreshToken');
 
     if (!user || user.refreshToken !== refreshToken) {
       return res.status(401).json({
@@ -249,7 +253,7 @@ router.post('/refresh', [
     console.error('Token refresh error:', error);
     res.status(401).json({
       success: false,
-      message: 'Invalid refresh token'
+      message: 'Failed to refresh token'
     });
   }
 });
@@ -281,11 +285,11 @@ router.post('/logout', authenticate, async (req, res) => {
 // @access  Private
 router.get('/me', authenticate, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password -refreshToken');
+    const user = await User.findById(req.user._id);
 
     res.json({
       success: true,
-      data: { user }
+      data: { user: user.toJSON() }
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -315,7 +319,12 @@ router.put('/profile', [
     .optional()
     .isEmail()
     .withMessage('Please provide a valid email')
-    .normalizeEmail()
+    .normalizeEmail(),
+  body('phone')
+    .optional()
+    .trim()
+    .isLength({ max: 15 })
+    .withMessage('Phone number cannot exceed 15 characters')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -328,7 +337,7 @@ router.put('/profile', [
       });
     }
 
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, phone } = req.body;
     const user = req.user;
 
     // Check if email is already taken by another user
@@ -346,23 +355,14 @@ router.put('/profile', [
     // Update fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
+    if (phone) user.phone = phone;
 
     await user.save();
-
-    // Return updated user data
-    const userResponse = {
-      _id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      isAdmin: user.isAdmin,
-      updatedAt: user.updatedAt
-    };
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { user: userResponse }
+      data: { user: user.toJSON() }
     });
   } catch (error) {
     console.error('Profile update error:', error);
@@ -386,6 +386,12 @@ router.put('/change-password', [
     .withMessage('New password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number')
+    .custom((value, { req }) => {
+      if (value === req.body.currentPassword) {
+        throw new Error('New password must be different from current password');
+      }
+      return true;
+    })
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -399,10 +405,13 @@ router.put('/change-password', [
     }
 
     const { currentPassword, newPassword } = req.body;
-    const user = req.user;
+    const user = await req.user.populate('_id').execPopulate();
+
+    // Refresh user object with password field
+    const userWithPassword = await User.findById(user._id).select('+password');
 
     // Check current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await userWithPassword.comparePassword(currentPassword);
     if (!isMatch) {
       return res.status(400).json({
         success: false,
@@ -410,13 +419,10 @@ router.put('/change-password', [
       });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // Update password
-    user.password = hashedPassword;
-    await user.save();
+    // Update password - model will hash it
+    userWithPassword.password = newPassword;
+    userWithPassword.passwordChangedAt = new Date();
+    await userWithPassword.save();
 
     res.json({
       success: true,

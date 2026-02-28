@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShopEase - Multi-category e-commerce platform with curated products, secure checkout, and fast shipping">
+    <meta name="theme-color" content="#0ea5a3">
+    <title>ShopEase — Premium Shopping Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            --primary:#0ea5a3;
+            --accent:#06b6d4;
+            --surface:#ffffff;
+            --muted:#6b7280;
+            --text:#0f172a;
+            --glass:rgba(255,255,255,0.7);
+            --success:#10b981;
+            --warning:#f59e0b;
+            --error:#ef4444;
+            --light-bg:#f8fafc;
+            --border-light:#e6edf3;
+            --shadow-sm:0 2px 8px rgba(15,23,42,0.04);
+            --shadow-md:0 6px 18px rgba(15,23,42,0.06);
+            --shadow-lg:0 10px 30px rgba(15,23,42,0.08);
+            --transition:all 260ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark Mode Theme */
+        [data-theme="dark"]{
+            --primary:#22d3ee;
+            --accent:#38bdf8;
+            --surface:#1e293b;
+            --muted:#94a3b8;
+            --text:#f1f5f9;
+            --glass:rgba(30,41,59,0.7);
+            --success:#34d399;
+            --warning:#fbbf24;
+            --error:#f87171;
+            --light-bg:#0f172a;
+            --border-light:#334155;
+            --shadow-sm:0 2px 8px rgba(0,0,0,0.2);
+            --shadow-md:0 6px 18px rgba(0,0,0,0.3);
+            --shadow-lg:0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="dark"] body{
+            background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);
+        }
+
+        [data-theme="dark"] .hero::before{
+            background:radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%);
+        }
+
+        [data-theme="dark"] .toast{
+            background:#1e293b;
+            border-left-color:var(--primary);
+        }
+
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+        html{
+            scroll-behavior:smooth;
+        }
+
+        body{
+            font-family:'Montserrat', 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            color:var(--text);
+            background:linear-gradient(180deg,var(--light-bg) 0%,#f1f5f9 100%);
+            line-height:1.6;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+
+        /* Header & Navigation */
+        header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:16px 28px;
+            border-bottom:1px solid var(--border-light);
+            background:var(--surface);
+            position:sticky;
+            top:0;
+            z-index:100;
+            box-shadow:var(--shadow-sm);
+            transition:var(--transition);
+        }
+
+        header:hover{
+            box-shadow:var(--shadow-md);
+        }
+
+        .brand{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            font-weight:800;
+            color:var(--text);
+            font-size:1.25rem;
+            text-decoration:none;
+            transition:var(--transition);
+        }
+
+        .brand:hover{
+            transform:translateY(-2px);
+        }
+
+        .brand i{
+            color:var(--primary);
+            font-size:24px;
+        }
+
+        nav{
+            display:flex;
+            gap:24px;
+            align-items:center;
+        }
+
+        nav a{
+            color:var(--muted);
+            text-decoration:none;
+            font-weight:700;
+            font-size:0.95rem;
+            transition:var(--transition);
+            position:relative;
+        }
+
+        nav a::after{
+            content:'';
+            position:absolute;
+            bottom:-4px;
+            left:0;
+            width:0;
+            height:2px;
+            background:var(--primary);
+            transition:width 260ms ease;
+        }
+
+        nav a:hover{
+            color:var(--primary);
+        }
+
+        nav a:hover::after{
+            width:100%;
+        }
+
+        .header-actions{
+            margin-left:auto;
+            display:flex;
+            align-items:center;
+            gap:16px;
+        }
+
+        .cart-link{
+            text-decoration:none;
+            color:var(--muted);
+            font-weight:700;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            transition:var(--transition);
+            position:relative;
+        }
+
+        .cart-link:hover{
+            color:var(--primary);
+        }
+
+        .cart-badge{
+            background:var(--primary);
+            color:white;
+            border-radius:999px;
+            padding:2px 8px;
+            font-weight:600;
+            font-size:0.85rem;
+            min-width:24px;
+            text-align:center;
+            animation:pulse 2s infinite;
+        }
+
+        @keyframes pulse{
+            0%, 100%{ transform:scale(1); }
+            50%{ transform:scale(1.05); }
+        }
+
+        /* Hero Section */
+        .hero{
+            display:flex;
+            gap:40px;
+            align-items:center;
+            justify-content:space-between;
+            padding:60px 28px;
+            max-width:1200px;
+            margin:40px auto;
+            background:linear-gradient(135deg, var(--surface) 0%, #fbfdff 100%);
+            border-radius:16px;
+            box-shadow:var(--shadow-lg);
+            overflow:hidden;
+            position:relative;
+        }
+
+        .hero::before{
+            content:'';
+            position:absolute;
+            top:-50%;
+            right:-50%;
+            width:600px;
+            height:600px;
+            background:radial-gradient(circle, rgba(14,165,163,0.1) 0%, transparent 70%);
+            border-radius:50%;
+            pointer-events:none;
+        }
+
+        .hero-left{
+            max-width:58%;
+            position:relative;
+            z-index:2;
+        }
+
+        .hero h1{
+            font-size:2.5rem;
+            margin:0 0 16px;
+            line-height:1.1;
+            color:var(--text);
+            font-weight:900;
+            letter-spacing:-0.5px;
+        }
+
+        .hero p{
+            margin:0 0 24px;
+            color:var(--muted);
+            font-size:1.05rem;
+            line-height:1.7;
+        }
+
+        .cta{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            background:var(--primary);
+            color:white;
+            padding:12px 24px;
+            border-radius:12px;
+            border:none;
+            text-decoration:none;
+            font-weight:800;
+            font-size:0.95rem;
+            box-shadow:0 8px 20px rgba(14,165,163,0.2);
+            cursor:pointer;
+            transition:var(--transition);
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .btn::before{
+            content:'';
+            position:absolute;
+            top:50%;
+            left:50%;
+            width:0;
+            height:0;
+            background:rgba(255,255,255,0.2);
+            border-radius:50%;
+            transform:translate(-50%, -50%);
+            transition:width 600ms, height 600ms;
+        }
+
+        .btn:hover::before{
+            width:300px;
+            height:300px;
+        }
+
+        .btn:hover{
+            transform:translateY(-3px);
+            box-shadow:0 12px 28px rgba(14,165,163,0.3);
+        }
+
+        .btn:active{
+            transform:translateY(-1px);
+        }
+
+        .btn.secondary{
+            background:transparent;
+            color:var(--text);
+            border:2px solid var(--border-light);
+            box-shadow:none;
+        }
+
+        .btn.secondary:hover{
+            background:var(--light-bg);
+            border-color:var(--primary);
+            color:var(--primary);
+        }
+
+        .hero-right{
+            flex:1;
+            text-align:right;
+            position:relative;
+            z-index:2;
+        }
+
+        .hero-right img{
+            max-width:100%;
+            height:auto;
+            border-radius:16px;
+            box-shadow:0 20px 40px rgba(14,165,163,0.15);
+            transition:var(--transition);
+        }
+
+        .hero-right img:hover{
+            transform:scale(1.02);
+        }
+
+        /* Features Grid */
+        .features{
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+            gap:18px;
+            max-width:1200px;
+            margin:40px auto;
+            padding:0 28px;
+        }
+
+        .feature{
+            background:var(--surface);
+            padding:24px;
+            border-radius:12px;
+            box-shadow:var(--shadow-md);
+            display:flex;
+            gap:16px;
+            align-items:flex-start;
+            transition:var(--transition);
+            cursor:pointer;
+            border:2px solid transparent;
+        }
+
+        .feature:hover{
+            transform:translateY(-4px);
+            box-shadow:var(--shadow-lg);
+            border-color:var(--primary);
+        }
+
+        .feature i{
+            font-size:28px;
+            color:var(--primary);
+            width:56px;
+            height:56px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:12px;
+            background:linear-gradient(135deg, rgba(14,165,163,0.1), rgba(6,182,212,0.08));
+            flex-shrink:0;
+        }
+
+        .feature-content{
+            flex:1;
+        }
+
+        .feature-title{
+            font-weight:800;
+            font-size:1rem;
+            margin-bottom:4px;
+            color:var(--text);
+        }
+
+        .feature-desc{
+            color:var(--muted);
+            font-size:0.9rem;
+            line-height:1.5;
+        }
+
+        .feature.category{
+            text-decoration:none;
+            color:inherit;
+        }
+
+        /* Featured Section */
+        .featured-section{
+            max-width:1200px;
+            margin:40px auto;
+            padding:0 28px;
+        }
+
+        .section-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:24px;
+            flex-wrap:wrap;
+            gap:16px;
+        }
+
+        .section-header h2{
+            margin:0;
+            font-size:1.75rem;
+            font-weight:900;
+            color:var(--text);
+        }
+
+        .carousel-controls{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+
+        .carousel{
+            overflow:hidden;
+            border-radius:14px;
+            background:var(--surface);
+            box-shadow:var(--shadow-md);
+        }
+
+        .carousel-track{
+            display:flex;
+            gap:12px;
+            transition:transform 400ms cubic-bezier(0.2, 0.9, 0.2, 1);
+            padding:12px;
+        }
+
+        .carousel-card{
+            background:var(--surface);
+            border-radius:12px;
+            box-shadow:var(--shadow-md);
+            flex:0 0 260px;
+            padding:12px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            cursor:pointer;
+            transition:var(--transition);
+            border:2px solid transparent;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .carousel-card::before{
+            content:'';
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background:linear-gradient(135deg, rgba(14,165,163,0.1), transparent);
+            opacity:0;
+            transition:opacity 260ms ease;
+            pointer-events:none;
+        }
+
+        .carousel-card:hover{
+            transform:translateY(-6px);
+            box-shadow:var(--shadow-lg);
+            border-color:var(--primary);
+        }
+
+        .carousel-card:hover::before{
+            opacity:1;
+        }
+
+        .carousel-card img{
+            width:100%;
+            height:160px;
+            object-fit:cover;
+            border-radius:10px;
+            transition:var(--transition);
+        }
+
+        .carousel-card:hover img{
+            transform:scale(1.05);
+        }
+
+        .carousel-card-content{
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+
+        .carousel-card-title{
+            font-weight:800;
+            font-size:0.95rem;
+            color:var(--text);
+            line-height:1.3;
+        }
+
+        .carousel-card-price{
+            color:var(--primary);
+            font-weight:800;
+            font-size:1.1rem;
+        }
+
+        .carousel-card-btn{
+            position:absolute;
+            right:12px;
+            bottom:12px;
+            padding:8px 12px;
+            font-size:0.85rem;
+            border-radius:8px;
+            opacity:0;
+            transform:translateY(10px);
+            transition:var(--transition);
+        }
+
+        .carousel-card:hover .carousel-card-btn{
+            opacity:1;
+            transform:translateY(0);
+        }
+
+        .carousel-indicators{
+            display:flex;
+            gap:8px;
+            align-items:center;
+            margin-top:16px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        .carousel-indicators button{
+            width:12px;
+            height:12px;
+            border-radius:50%;
+            border:none;
+            background:var(--border-light);
+            cursor:pointer;
+            transition:var(--transition);
+        }
+
+        .carousel-indicators button:hover{
+            background:#d1d5db;
+        }
+
+        .carousel-indicators button.active{
+            background:var(--primary);
+            width:28px;
+            border-radius:6px;
+        }
+
+        .carousel-thumbnails{
+            display:flex;
+            gap:8px;
+            justify-content:center;
+            flex-wrap:wrap;
+            margin-top:12px;
+        }
+
+        .carousel-thumbnails button{
+            border:0;
+            background:transparent;
+            padding:4px;
+            border-radius:8px;
+            cursor:pointer;
+            transition:var(--transition);
+            border:2px solid transparent;
+        }
+
+        .carousel-thumbnails button:hover{
+            border-color:var(--primary);
+        }
+
+        .carousel-thumbnails img{
+            width:64px;
+            height:44px;
+            object-fit:cover;
+            border-radius:6px;
+            box-shadow:var(--shadow-sm);
+        }
+
+        /* Testimonials */
+        .testimonials{
+            max-width:1100px;
+            margin:40px auto;
+            padding:32px 28px;
+            background:linear-gradient(135deg, rgba(14,165,163,0.04), rgba(6,182,212,0.02));
+            border-radius:16px;
+            display:grid;
+            grid-template-columns:1fr 320px;
+            gap:28px;
+            border:1px solid var(--border-light);
+        }
+
+        .testimonials-content h3{
+            margin:0 0 16px;
+            font-size:1.5rem;
+            font-weight:900;
+            color:var(--text);
+        }
+
+        .testimonial{
+            background:var(--glass);
+            padding:20px;
+            border-radius:12px;
+            box-shadow:var(--shadow-sm);
+            border-left:4px solid var(--primary);
+            transition:var(--transition);
+            margin-bottom:16px;
+        }
+
+        .testimonial:hover{
+            box-shadow:var(--shadow-md);
+            transform:translateX(4px);
+        }
+
+        .testimonial p{
+            color:var(--text);
+            font-weight:600;
+            margin:0 0 12px;
+            line-height:1.6;
+            font-style:italic;
+        }
+
+        .testimonial cite{
+            display:block;
+            color:var(--muted);
+            font-size:0.9rem;
+            font-style:normal;
+        }
+
+        .testimonials-aside{
+            display:flex;
+            flex-direction:column;
+            gap:16px;
+            align-items:stretch;
+        }
+
+        .testimonial-card{
+            background:var(--surface);
+            padding:16px;
+            border-radius:12px;
+            box-shadow:var(--shadow-sm);
+            transition:var(--transition);
+        }
+
+        .testimonial-card:hover{
+            box-shadow:var(--shadow-md);
+            transform:translateY(-2px);
+        }
+
+        .testimonial-card strong{
+            display:block;
+            color:var(--text);
+            font-weight:800;
+            margin-bottom:4px;
+        }
+
+        .testimonial-card-desc{
+            color:var(--muted);
+            font-size:0.9rem;
+            line-height:1.5;
+        }
+
+        .testimonial-card.highlight{
+            background:linear-gradient(135deg, var(--primary), var(--accent));
+            color:white;
+        }
+
+        .testimonial-card.highlight strong,
+        .testimonial-card.highlight .testimonial-card-desc{
+            color:white;
+        }
+
+        /* Newsletter */
+        .newsletter{
+            max-width:1000px;
+            margin:40px auto;
+            padding:32px 28px;
+            background:var(--surface);
+            border-radius:16px;
+            display:flex;
+            gap:16px;
+            align-items:center;
+            box-shadow:var(--shadow-lg);
+            border:1px solid var(--border-light);
+            flex-wrap:wrap;
+        }
+
+        .newsletter-text{
+            font-weight:800;
+            font-size:1.1rem;
+            color:var(--text);
+            min-width:200px;
+        }
+
+        .newsletter-form{
+            display:flex;
+            flex:1;
+            gap:8px;
+            align-items:center;
+            min-width:280px;
+        }
+
+        .newsletter-form input[type="email"]{
+            flex:1;
+            padding:12px 16px;
+            border-radius:10px;
+            border:2px solid var(--border-light);
+            font-size:0.95rem;
+            transition:var(--transition);
+            font-family:inherit;
+        }
+
+        .newsletter-form input[type="email"]:focus{
+            outline:none;
+            border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(14,165,163,0.1);
+        }
+
+        .newsletter-form button{
+            padding:12px 24px;
+            border-radius:10px;
+            white-space:nowrap;
+        }
+
+        /* Footer */
+        footer{
+            max-width:1200px;
+            margin:60px auto 0;
+            padding:40px 28px;
+            text-align:center;
+            color:var(--muted);
+            border-top:1px solid var(--border-light);
+            background:var(--light-bg);
+        }
+
+        footer p{
+            margin:0;
+            line-height:1.8;
+        }
+
+        footer strong{
+            color:var(--text);
+            font-weight:800;
+        }
+
+        /* Toast Notifications */
+        #homeToastContainer{
+            position:fixed;
+            bottom:20px;
+            right:20px;
+            z-index:9999;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            max-width:400px;
+        }
+
+        .toast{
+            background:#111827;
+            color:white;
+            padding:14px 18px;
+            border-radius:10px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.3);
+            opacity:0;
+            transform:translateY(20px) translateX(400px);
+            transition:var(--transition);
+            border-left:4px solid var(--primary);
+            font-weight:600;
+            font-size:0.95rem;
+        }
+
+        .toast.show{
+            opacity:1;
+            transform:translateY(0) translateX(0);
+        }
+
+        .toast.success{
+            border-left-color:var(--success);
+        }
+
+        .toast.error{
+            border-left-color:var(--error);
+        }
+
+        .toast.warning{
+            border-left-color:var(--warning);
+        }
+
+        /* Responsive Design */
+        @media (max-width:1024px){
+            .hero{
+                flex-direction:column;
+                text-align:center;
+                padding:40px 28px;
+            }
+
+            .hero-left{
+                max-width:100%;
+            }
+
+            .hero h1{
+                font-size:2rem;
+            }
+
+            .hero-right{
+                text-align:center;
+            }
+
+            .hero-right img{
+                max-width:100%;
+                max-height:300px;
+            }
+
+            .testimonials{
+                grid-template-columns:1fr;
+            }
+
+            .testimonials-aside{
+                flex-direction:row;
+            }
+        }
+
+        @media (max-width:768px){
+            header{
+                padding:12px 16px;
+            }
+
+            nav{
+                gap:12px;
+                font-size:0.85rem;
+            }
+
+            .hero{
+                padding:28px 16px;
+                margin:20px auto;
+            }
+
+            .hero h1{
+                font-size:1.5rem;
+            }
+
+            .hero p{
+                font-size:0.95rem;
+            }
+
+            .cta{
+                flex-direction:column;
+            }
+
+            .btn{
+                width:100%;
+                justify-content:center;
+            }
+
+            .features{
+                grid-template-columns:1fr;
+                gap:12px;
+                padding:0 16px;
+            }
+
+            .featured-section{
+                padding:0 16px;
+            }
+
+            .section-header{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .carousel-card{
+                flex:0 0 200px;
+            }
+
+            .newsletter{
+                flex-direction:column;
+                align-items:stretch;
+                padding:24px 16px;
+            }
+
+            .newsletter-text{
+                text-align:center;
+            }
+
+            .newsletter-form{
+                flex-direction:column;
+            }
+
+            .newsletter-form input,
+            .newsletter-form button{
+                width:100%;
+            }
+
+            footer{
+                padding:28px 16px;
+            }
+
+            #homeToastContainer{
+                max-width:calc(100% - 20px);
+                right:10px;
+                left:10px;
+            }
+        }
+
+        @media (max-width:480px){
+            header{
+                flex-direction:column;
+                gap:12px;
+                padding:12px;
+            }
+
+            nav{
+                width:100%;
+                justify-content:center;
+                gap:8px;
+            }
+
+            .header-actions{
+                margin-left:0;
+                width:100%;
+                justify-content:center;
+            }
+
+            .hero h1{
+                font-size:1.25rem;
+            }
+
+            .carousel-card{
+                flex:0 0 160px;
+            }
+
+            .carousel-card img{
+                height:120px;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only{
+            position:absolute;
+            width:1px;
+            height:1px;
+            padding:0;
+            margin:-1px;
+            overflow:hidden;
+            clip:rect(0,0,0,0);
+            white-space:nowrap;
+            border-width:0;
+        }
+
+        *:focus-visible{
+            outline:3px solid var(--primary);
+            outline-offset:2px;
+        }
+
+        /* Print Styles */
+        @media print{
+            header, .carousel-controls, .newsletter, #homeToastContainer{
+                display:none;
+            }
+
+            body{
+                background:white;
+            }
+
+            .hero, .feature, .testimonial{
+                box-shadow:none;
+                border:1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="#" class="brand" aria-label="ShopEase Home">
+            <i class="fas fa-store"></i>
+            <span>ShopEase</span>
+        </a>
+        <nav role="navigation" aria-label="Main navigation">
+            <a href="dashboard.html">Shop</a>
+            <a href="orders.html">Orders</a>
+            <a href="admin-login.html">Admin</a>
+        </nav>
+        <div class="header-actions">
+            <button id="themeToggle" class="btn secondary" style="padding:8px 12px;border-radius:8px;" title="Toggle dark/light mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <a href="dashboard.html" class="cart-link" title="Shopping Cart" aria-label="Shopping cart">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" id="homeCartCount" aria-live="polite">0</span>
+            </a>
+        </div>
+    </header>
+
+    <main role="main">
+        <!-- Hero Section -->
+        <section class="hero" aria-label="Welcome to ShopEase">
+            <div class="hero-left">
+                <h1>Shop the best deals across categories</h1>
+                <p>Explore electronics, fashion, home goods and more — curated picks, secure checkout, and fast simulated shipping for demo purposes.</p>
+                <div class="cta">
+                    <a class="btn" href="dashboard.html" aria-label="Start shopping now">
+                        <i class="fas fa-shopping-bag"></i> Shop Now
+                    </a>
+                    <a class="btn secondary" href="admin-login.html" aria-label="Admin login">
+                        <i class="fas fa-lock"></i> Admin Login
+                    </a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <img loading="lazy" src="assets/images/hero-shopping.jpg" alt="Shopping hero image" onerror="this.src='https://via.placeholder.com/360x300?text=ShopEase'">
+            </div>
+        </section>
+
+        <!-- Featured Products Carousel -->
+        <section class="featured-section" aria-label="Featured products">
+            <div class="section-header">
+                <h2>Featured Products</h2>
+                <div class="carousel-controls">
+                    <button id="featPrev" class="btn secondary" aria-label="Previous featured products">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </button>
+                    <button id="featNext" class="btn" aria-label="Next featured products">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="carousel" id="featuredCarousel" role="region" aria-roledescription="carousel" aria-label="Featured products carousel" tabindex="0">
+                <div class="carousel-track" id="featuredTrack" role="list"></div>
+            </div>
+            <div class="carousel-indicators" id="featuredIndicators" aria-hidden="false" role="tablist"></div>
+            <div class="carousel-thumbnails" id="featuredThumbs" aria-hidden="false"></div>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="features" aria-label="Why choose ShopEase">
+            <div class="feature" tabindex="0" role="article" aria-label="Curated collections: Handpicked trending items">
+                <i class="fas fa-tags"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Curated Collections</div>
+                    <div class="feature-desc">Handpicked trending items</div>
+                </div>
+            </div>
+            <div class="feature" tabindex="0" role="article" aria-label="Secure & simulated: Safe demo transactions">
+                <i class="fas fa-shield-alt"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Secure & Simulated</div>
+                    <div class="feature-desc">Safe demo transactions</div>
+                </div>
+            </div>
+            <div class="feature" tabindex="0" role="article" aria-label="Fast demo shipping: Simulated delivery experience">
+                <i class="fas fa-truck"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Fast Demo Shipping</div>
+                    <div class="feature-desc">Simulated delivery experience</div>
+                </div>
+            </div>
+            <div class="feature" tabindex="0" role="article" aria-label="Wishlist: Save favorites for later">
+                <i class="fas fa-heart"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Wishlist</div>
+                    <div class="feature-desc">Save favorites for later</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="features categories" aria-label="Shop by category" style="margin-top:40px">
+            <a class="feature category" href="dashboard.html?cat=electronics" aria-label="Browse Electronics">
+                <i class="fas fa-tv"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Electronics</div>
+                    <div class="feature-desc">Phones & computers</div>
+                </div>
+            </a>
+            <a class="feature category" href="dashboard.html?cat=fashion" aria-label="Browse Fashion">
+                <i class="fas fa-tshirt"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Fashion</div>
+                    <div class="feature-desc">Clothing & accessories</div>
+                </div>
+            </a>
+            <a class="feature category" href="dashboard.html?cat=home" aria-label="Browse Home & Kitchen">
+                <i class="fas fa-blender"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Home</div>
+                    <div class="feature-desc">Kitchen & living</div>
+                </div>
+            </a>
+            <a class="feature category" href="dashboard.html?cat=sports" aria-label="Browse Sports">
+                <i class="fas fa-basketball-ball"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Sports</div>
+                    <div class="feature-desc">Fitness & outdoors</div>
+                </div>
+            </a>
+            <a class="feature category" href="dashboard.html?cat=beauty" aria-label="Browse Beauty & Health">
+                <i class="fas fa-spa"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Beauty</div>
+                    <div class="feature-desc">Skincare & grooming</div>
+                </div>
+            </a>
+            <a class="feature category" href="dashboard.html?cat=toys" aria-label="Browse Toys & Games">
+                <i class="fas fa-puzzle-piece"></i>
+                <div class="feature-content">
+                    <div class="feature-title">Toys</div>
+                    <div class="feature-desc">Games & family fun</div>
+                </div>
+            </a>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="testimonials" aria-label="Customer testimonials">
+            <div class="testimonials-content">
+                <h3>Loved by shoppers</h3>
+                <div class="testimonial">
+                    <p>"I loved the curated picks — found amazing deals and the site felt fast and accessible. Great demo store!"</p>
+                    <cite>— Amina, Lagos</cite>
+                </div>
+                <div class="testimonial">
+                    <p>"The quick-add carousel makes browsing so much easier — useful for demos and prototyping."</p>
+                    <cite>— Michael, Accra</cite>
+                </div>
+            </div>
+            <div class="testimonials-aside">
+                <div class="testimonial-card">
+                    <strong>30-day demo returns</strong>
+                    <div class="testimonial-card-desc">Try the demo, risk-free.</div>
+                </div>
+                <div class="testimonial-card highlight">
+                    <strong>Top categories updated weekly</strong>
+                    <div class="testimonial-card-desc">Fresh deals every 7 days</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="newsletter" aria-label="Newsletter signup">
+            <div class="newsletter-text">Get updates & exclusive demo offers</div>
+            <form class="newsletter-form" onsubmit="event.preventDefault(); showHomeToast('Thanks — you\'re subscribed!'); this.querySelector('input').value='';" aria-label="Email subscription form">
+                <input type="email" placeholder="Enter your email" required aria-label="Email address" aria-describedby="newsletter-desc">
+                <span id="newsletter-desc" class="sr-only">Enter your email to subscribe to our newsletter</span>
+                <button class="btn" type="submit" aria-label="Subscribe to newsletter">Subscribe</button>
+            </form>
+        </section>
+
+        <!-- Footer -->
+        <footer role="contentinfo">
+            <p><strong>© 2025 ShopEase</strong> — Multi-category demo store.</p>
+            <p>Payments and orders are simulated for demonstration purposes.</p>
+        </footer>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="homeToastContainer" aria-live="polite" aria-atomic="true" role="status"></div>
+
+    <!-- Scripts -->
+    <script src="assets/js/products.js"></script>
+    <script>
+        // Toast notification system
+        function showHomeToast(msg, type = 'success', duration = 2500){
+            const container = document.getElementById('homeToastContainer');
+            if(!container) return;
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            t.setAttribute('role', 'alert');
+            container.appendChild(t);
+            setTimeout(()=> t.classList.add('show'), 10);
+            setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(), 300); }, duration);
+        }
+
+        // Cart management functions
+        function loadHomeCart(){ try{ return JSON.parse(localStorage.getItem('shop_cart')||'{}'); }catch(e){ return {}; } }
+        function saveHomeCart(c){ try{ localStorage.setItem('shop_cart', JSON.stringify(c)); updateHomeCartCount(); }catch(e){ console.warn('saveHomeCart',e); } }
+        function updateHomeCartCount(){ const cnt = Object.values(loadHomeCart()).reduce((s,n)=>s+n,0)||0; const el = document.getElementById('homeCartCount'); if(el) el.textContent = cnt; }
+        
+        // Wishlist management functions
+        function loadWishlist(){ try{ return JSON.parse(localStorage.getItem('shop_wishlist')||'[]'); }catch(e){ return []; } }
+        function saveWishlist(w){ try{ localStorage.setItem('shop_wishlist', JSON.stringify(w)); }catch(e){ console.warn('saveWishlist',e); } }
+        function toggleWishlist(productId){
+            const wishlist = loadWishlist();
+            const idx = wishlist.indexOf(productId);
+            if(idx > -1){ wishlist.splice(idx, 1); showHomeToast('Removed from wishlist', 'success'); }
+            else{ wishlist.push(productId); showHomeToast('Added to wishlist', 'success'); }
+            saveWishlist(wishlist);
+            return wishlist.includes(productId);
+        }
+        function isInWishlist(productId){ return loadWishlist().includes(productId); }
+
+        // Search functionality
+        function searchProducts(query){
+            if(!query || typeof PRODUCTS === 'undefined') return [];
+            const q = query.toLowerCase();
+            return PRODUCTS.filter(p => p.title.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)));
+        }
+
+        // Filter products by category
+        function filterByCategory(category){
+            if(!category || category === 'all' || typeof PRODUCTS === 'undefined') return PRODUCTS;
+            return PRODUCTS.filter(p => p.cat === category);
+        }
+
+        // Sort products
+        function sortProducts(products, sortBy){
+            const sorted = [...products];
+            switch(sortBy){
+                case 'price-low': return sorted.sort((a,b) => a.price - b.price);
+                case 'price-high': return sorted.sort((a,b) => b.price - a.price);
+                case 'name-asc': return sorted.sort((a,b) => a.title.localeCompare(b.title));
+                case 'name-desc': return sorted.sort((a,b) => b.title.localeCompare(a.title));
+                case 'newest': return sorted.reverse();
+                default: return sorted;
+            }
+        }
+
+        // Get product by ID
+        function getProductById(id){
+            if(typeof PRODUCTS === 'undefined') return null;
+            return PRODUCTS.find(p => p.id === id || p._id === id);
+        }
+
+        // Get related products
+        function getRelatedProducts(productId, limit = 4){
+            const product = getProductById(productId);
+            if(!product || typeof PRODUCTS === 'undefined') return [];
+            return PRODUCTS.filter(p => p.cat === product.cat && p.id !== productId).slice(0, limit);
+        }
+
+        // Calculate cart total
+        function calculateCartTotal(){
+            const cart = loadHomeCart();
+            let total = 0;
+            Object.keys(cart).forEach(id => {
+                const product = getProductById(id);
+                if(product) total += product.price * cart[id];
+            });
+            return total;
+        }
+
+        // Get cart items count
+        function getCartItemsCount(){
+            const cart = loadHomeCart();
+            return Object.values(cart).reduce((s,n) => s+n, 0);
+        }
+
+        // Get cart items details
+        function getCartItems(){
+            const cart = loadHomeCart();
+            const items = [];
+            Object.keys(cart).forEach(id => {
+                const product = getProductById(id);
+                if(product){
+                    items.push({
+                        ...product,
+                        quantity: cart[id],
+                        subtotal: product.price * cart[id]
+                    });
+                }
+            });
+            return items;
+        }
+
+        // Add to cart with validation
+        function addToCart(productId, quantity = 1){
+            const product = getProductById(productId);
+            if(!product){
+                showHomeToast('Product not found', 'error');
+                return false;
+            }
+            const cart = loadHomeCart();
+            cart[productId] = (cart[productId] || 0) + quantity;
+            saveHomeCart(cart);
+            showHomeToast(`Added ${quantity} x ${product.title} to cart`, 'success');
+            return true;
+        }
+
+        // Remove from cart
+        function removeFromCart(productId){
+            const cart = loadHomeCart();
+            if(cart[productId]){
+                delete cart[productId];
+                saveHomeCart(cart);
+                showHomeToast('Removed from cart', 'success');
+                return true;
+            }
+            return false;
+        }
+
+        // Update cart quantity
+        function updateCartQuantity(productId, quantity){
+            const cart = loadHomeCart();
+            if(quantity <= 0){
+                return removeFromCart(productId);
+            }
+            cart[productId] = quantity;
+            saveHomeCart(cart);
+            return true;
+        }
+
+        // Clear cart
+        function clearCart(){
+            try{
+                localStorage.removeItem('shop_cart');
+                updateHomeCartCount();
+                showHomeToast('Cart cleared', 'success');
+                return true;
+            }catch(e){
+                console.warn('clearCart error', e);
+                return false;
+            }
+        }
+
+        // Initialize cart count on page load
+        updateHomeCartCount();
+
+        // Featured products
+        const FEATURED_IDS = ['e1','e3','f1','h7','t2','b1'];
+
+        function getFeaturedItems(){
+            const overrides = (function(){ try{ return JSON.parse(localStorage.getItem('focusflow_featured_overrides')||'{}'); }catch(e){return{}} })();
+            const ids = new Set(FEATURED_IDS);
+            Object.keys(overrides).forEach(id => {
+                if(overrides[id]) ids.add(id); else ids.delete(id);
+            });
+            return Array.from(ids).map(id => PRODUCTS.find(p => p.id === id || p._id === id)).filter(Boolean);
+        }
+
+        function renderFeatured(){
+            const track = document.getElementById('featuredTrack');
+            if(!track || typeof PRODUCTS === 'undefined') return;
+            const items = getFeaturedItems();
+            track.innerHTML = items.map(p => `
+                <div class="carousel-card" data-id="${p.id}" title="${p.title}" tabindex="0" role="button" aria-label="View ${p.title}">
+                    <img loading="lazy" src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/260x160?text=Product'">
+                    <div class="carousel-card-content">
+                        <div class="carousel-card-title">${p.title}</div>
+                        <div class="carousel-card-price">₦${p.price.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+                    </div>
+                    <button class="btn carousel-card-btn" data-add="${p.id}" aria-label="Add ${p.title} to cart">Add to Cart</button>
+                </div>
+            `).join('');
+
+            const indicators = document.getElementById('featuredIndicators');
+            if(indicators){
+                indicators.innerHTML = items.map((_,i)=>`<button aria-label="Go to slide ${i+1}" data-index="${i}" role="tab" ${i===0? 'class="active" aria-selected="true"' : 'aria-selected="false"'}></button>`).join('');
+                indicators.querySelectorAll('button').forEach(btn=>btn.addEventListener('click', (e)=>{ idx = Number(e.currentTarget.dataset.index); update(); updateIndicators(); }));
+            }
+
+            const thumbs = document.getElementById('featuredThumbs');
+            if(thumbs){
+                thumbs.innerHTML = items.map((p,i)=>`<button aria-label="Preview ${p.title}" data-index="${i}" style="border:0;background:transparent;padding:4px;border-radius:8px"><img src="${(p.images && p.images[0] && p.images[0].url) || p.img}" alt="${p.title}" style="width:64px;height:44px;object-fit:cover;border-radius:6px;box-shadow:0 6px 18px rgba(2,6,23,0.06)"></button>`).join('');
+                thumbs.querySelectorAll('button').forEach(btn=>btn.addEventListener('click', (e)=>{ idx = Number(e.currentTarget.dataset.index); update(); updateIndicators(); }));
+            }
+
+            attachCarouselHandlers(items);
+            update(); updateIndicators();
+        }
+
+        function attachCarouselHandlers(items){
+            const track = document.getElementById('featuredTrack');
+            track.querySelectorAll('.carousel-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if(e.target && e.target.dataset && e.target.dataset.add) return;
+                    const id = card.dataset.id;
+                    window.location.href = `dashboard.html?product=${encodeURIComponent(id)}`;
+                });
+                card.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
+                const addBtn = card.querySelector('button[data-add]');
+                if(addBtn){ addBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); const id = ev.currentTarget.dataset.add; const c = loadHomeCart(); c[id] = (c[id]||0)+1; saveHomeCart(c); showHomeToast('Added to cart'); }); }
+            });
+        }
+
+        // Carousel navigation
+        (function(){
+            let idx = 0;
+            let perView = 3;
+            const track = document.getElementById('featuredTrack');
+            const next = document.getElementById('featNext');
+            const prev = document.getElementById('featPrev');
+
+            function computePerView(){
+                const container = document.getElementById('featuredCarousel');
+                const sample = track.querySelector('.carousel-card');
+                if(!container || !sample) return 1;
+                const containerW = container.getBoundingClientRect().width;
+                const cardW = sample.getBoundingClientRect().width + 12;
+                return Math.max(1, Math.floor(containerW / cardW));
+            }
+
+            function update(){
+                if(!track) return;
+                perView = computePerView();
+                const cardWidth = track.querySelector('.carousel-card')?.getBoundingClientRect().width || 260;
+                const gap = 12;
+                const translate = -(idx * (cardWidth + gap));
+                track.style.transform = `translateX(${translate}px)`;
+            }
+
+            function updateIndicators(){ 
+                const indicators = document.getElementById('featuredIndicators'); 
+                if(!indicators) return; 
+                indicators.querySelectorAll('button').forEach((b,i)=> { 
+                    b.classList.toggle('active', i===idx); 
+                    b.setAttribute('aria-selected', i===idx ? 'true' : 'false'); 
+                }); 
+            }
+
+            function goNext(){ const count = track.querySelectorAll('.carousel-card').length; idx = Math.min(idx+1, Math.max(0, count - perView)); update(); updateIndicators(); }
+            function goPrev(){ idx = Math.max(0, idx-1); update(); updateIndicators(); }
+
+            async function fetchFeaturedFromApi(){
+                try{
+                    const resp = await fetch('/api/products/featured?limit=8');
+                    if(!resp.ok) throw new Error('Network');
+                    const j = await resp.json();
+                    if(j && j.success && j.data && Array.isArray(j.data.products)) return j.data.products;
+                }catch(e){ console.warn('fetchFeaturedFromApi failed', e); }
+                return null;
+            }
+
+            (async function initFeatured(){
+                const apiItems = await fetchFeaturedFromApi();
+                if(apiItems && apiItems.length){
+                    const track = document.getElementById('featuredTrack');
+                    const indicators = document.getElementById('featuredIndicators');
+                    const items = apiItems;
+                    track.innerHTML = items.map(p => `
+                        <div class="carousel-card" data-id="${p._id || p.id}" title="${p.title}" tabindex="0" role="button" aria-label="View ${p.title}">
+                            <img loading="lazy" src="${(p.images && p.images[0] && p.images[0].url) || p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/260x160?text=Product'">
+                            <div class="carousel-card-content">
+                                <div class="carousel-card-title">${p.title}</div>
+                                <div class="carousel-card-price">₦${(p.price||0).toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+                            </div>
+                            <button class="btn carousel-card-btn" data-add="${p._id || p.id}" aria-label="Add ${p.title} to cart">Add to Cart</button>
+                        </div>
+                    `).join('');
+                    if(indicators){ indicators.innerHTML = items.map((_,i)=>`<button aria-label="Go to slide ${i+1}" data-index="${i}" role="tab" ${i===0? 'class="active" aria-selected="true"' : 'aria-selected="false"'}></button>`).join(''); }
+                    attachCarouselHandlers(items);
+                    update(); updateIndicators();
+                    return;
+                }
+                renderFeatured();
+            })();
+
+            if(next) next.addEventListener('click', goNext);
+            if(prev) prev.addEventListener('click', goPrev);
+
+            let auto = setInterval(() => { const count = track.querySelectorAll('.carousel-card').length; idx = (idx + 1) % Math.max(1, count - perView + 1); update(); updateIndicators(); }, 4000);
+            const carousel = document.getElementById('featuredCarousel');
+            if(carousel){
+                carousel.addEventListener('mouseenter', ()=> clearInterval(auto));
+                carousel.addEventListener('mouseleave', ()=> { auto = setInterval(() => { const count = track.querySelectorAll('.carousel-card').length; idx = (idx + 1) % Math.max(1, count - perView + 1); update(); updateIndicators(); }, 4000); });
+                carousel.addEventListener('focusin', ()=> clearInterval(auto));
+                carousel.addEventListener('focusout', ()=> { auto = setInterval(() => { const count = track.querySelectorAll('.carousel-card').length; idx = (idx + 1) % Math.max(1, count - perView + 1); update(); updateIndicators(); }, 4000); });
+
+                let startX=0, deltaX=0, touching=false;
+                carousel.addEventListener('touchstart', (ev)=>{ touching=true; startX = ev.touches[0].clientX; clearInterval(auto); });
+                carousel.addEventListener('touchmove', (ev)=>{ if(!touching) return; deltaX = ev.touches[0].clientX - startX; });
+                carousel.addEventListener('touchend', ()=>{ touching=false; if(Math.abs(deltaX) > 40){ if(deltaX < 0) goNext(); else goPrev(); } deltaX = 0; auto = setInterval(() => { const count = track.querySelectorAll('.carousel-card').length; idx = (idx + 1) % Math.max(1, count - perView + 1); update(); updateIndicators(); }, 4000); });
+            }
+
+            document.addEventListener('keydown', (e)=>{
+                if(document.activeElement && document.activeElement.closest && document.activeElement.closest('#featuredCarousel')){
+                    if(e.key === 'ArrowRight') { goNext(); e.preventDefault(); }
+                    else if(e.key === 'ArrowLeft'){ goPrev(); e.preventDefault(); }
+                }
+            });
+
+            window.addEventListener('resize', update);
+            window.addEventListener('load', ()=> setTimeout(update, 120));
+        })();
+
+        // Theme Toggle Functionality
+        (function(){
+            const themeToggle = document.getElementById('themeToggle');
+            
+            // Get saved theme or default to light
+            function getSavedTheme(){
+                try{
+                    return localStorage.getItem('shopease_theme') || localStorage.getItem('focusflow_theme') || 'light';
+                }catch(e){
+                    return 'light';
+                }
+            }
+
+            // Save theme preference
+            function saveTheme(theme){
+                try{
+                    localStorage.setItem('shopease_theme', theme);
+                    localStorage.setItem('focusflow_theme', theme); // For compatibility
+                }catch(e){
+                    console.warn('Could not save theme preference', e);
+                }
+            }
+
+            // Apply theme
+            function applyTheme(theme){
+                document.documentElement.setAttribute('data-theme', theme);
+                if(themeToggle){
+                    const icon = themeToggle.querySelector('i');
+                    if(icon){
+                        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                }
+            }
+
+            // Toggle theme
+            function toggleTheme(){
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+                saveTheme(newTheme);
+                showHomeToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'success', 1500);
+            }
+
+            // Initialize theme on page load
+            const savedTheme = getSavedTheme();
+            applyTheme(savedTheme);
+
+            // Add click event listener
+            if(themeToggle){
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+
+            // Listen for system theme changes
+            if(window.matchMedia){
+                const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                darkModeQuery.addEventListener('change', (e) => {
+                    if(!localStorage.getItem('shopease_theme')){
+                        applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        })();
+    </script>
+    <script src="security.js"></script>
+</body>
+</html>

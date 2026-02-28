@@ -4,19 +4,29 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true,
-    maxlength: 50,
+    required: [true, 'First name is required'],
+    maxlength: [50, 'First name cannot exceed 50 characters'],
     trim: true
   },
   lastName: {
     type: String,
-    required: true,
-    maxlength: 50,
+    required: [true, 'Last name is required'],
+    maxlength: [50, 'Last name cannot exceed 50 characters'],
     trim: true
+  },
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [50, 'Username cannot exceed 50 characters'],
+    match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores']
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
     trim: true,
@@ -24,12 +34,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false // Don't include password by default in queries
   },
   phone: {
     type: String,
-    maxlength: 15,
+    maxlength: [15, 'Phone number cannot exceed 15 characters'],
     trim: true
   },
   isAdmin: {
@@ -39,6 +50,10 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  refreshToken: {
+    type: String,
+    select: false
   },
   cart: {
     items: [{
@@ -50,7 +65,7 @@ const userSchema = new mongoose.Schema({
       quantity: {
         type: Number,
         required: true,
-        min: 1
+        min: [1, 'Quantity must be at least 1']
       },
       addedAt: {
         type: Date,
@@ -65,22 +80,50 @@ const userSchema = new mongoose.Schema({
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product'
-  }]
+  }],
+  lastLogin: Date,
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetTokenExpire: Date
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Hash password before saving
+// Indexes for performance
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ isAdmin: 1 });
+
+// Hash password before saving only if it's been modified
 userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 12);
+  // Only hash if password is new or modified
+  if (!this.isModified('password')) {
+    return next();
   }
-  next();
+
+  try {
+    // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, etc.)
+    if (this.password.startsWith('$2')) {
+      return next();
+    }
+    
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed');
+  }
 };
 
 // Method to get cart total
@@ -160,15 +203,28 @@ userSchema.methods.removeFromWishlist = function(productId) {
   return this.save();
 };
 
+// Method to check if product is in wishlist
+userSchema.methods.isInWishlist = function(productId) {
+  return this.wishlist.some(id => id.toString() === productId.toString());
+};
+
 // Static method to find user by email
 userSchema.statics.findByEmail = function(email) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
-// Transform output to exclude password
+// Static method to find user by username
+userSchema.statics.findByUsername = function(username) {
+  return this.findOne({ username: username.toLowerCase() });
+};
+
+// Transform output to exclude sensitive data
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;
+  delete userObject.refreshToken;
+  delete userObject.passwordResetToken;
+  delete userObject.passwordResetTokenExpire;
   return userObject;
 };
 

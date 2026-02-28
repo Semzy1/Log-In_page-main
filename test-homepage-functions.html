@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Homepage Functions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0ea5a3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0c8a88;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Homepage Functions Test</h1>
+    <p>This page tests all the functions from Homepage.html</p>
+
+    <div class="test-section">
+        <h2>1. Products Loading Test</h2>
+        <button onclick="testProductsLoading()">Test Products Array</button>
+        <div id="products-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Cart Functions Test</h2>
+        <button onclick="testCartFunctions()">Test Cart Functions</button>
+        <div id="cart-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Wishlist Functions Test</h2>
+        <button onclick="testWishlistFunctions()">Test Wishlist Functions</button>
+        <div id="wishlist-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Search & Filter Test</h2>
+        <button onclick="testSearchFilter()">Test Search & Filter</button>
+        <div id="search-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Theme Toggle Test</h2>
+        <button onclick="testThemeToggle()">Toggle Theme</button>
+        <div id="theme-result" class="result"></div>
+    </div>
+
+    <script src="assets/js/products.js"></script>
+    <script>
+        // Copy all functions from Homepage.html
+        function loadHomeCart(){ try{ return JSON.parse(localStorage.getItem('shop_cart')||'{}'); }catch(e){ return {}; } }
+        function saveHomeCart(c){ try{ localStorage.setItem('shop_cart', JSON.stringify(c)); }catch(e){ console.warn('saveHomeCart',e); } }
+        function loadWishlist(){ try{ return JSON.parse(localStorage.getItem('shop_wishlist')||'[]'); }catch(e){ return []; } }
+        function saveWishlist(w){ try{ localStorage.setItem('shop_wishlist', JSON.stringify(w)); }catch(e){ console.warn('saveWishlist',e); } }
+        
+        function searchProducts(query){
+            if(!query || typeof PRODUCTS === 'undefined') return [];
+            const q = query.toLowerCase();
+            return PRODUCTS.filter(p => p.title.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)));
+        }
+        
+        function filterByCategory(category){
+            if(!category || category === 'all' || typeof PRODUCTS === 'undefined') return PRODUCTS;
+            return PRODUCTS.filter(p => p.cat === category);
+        }
+        
+        function getProductById(id){
+            if(typeof PRODUCTS === 'undefined') return null;
+            return PRODUCTS.find(p => p.id === id || p._id === id);
+        }
+        
+        function addToCart(productId, quantity = 1){
+            const product = getProductById(productId);
+            if(!product) return false;
+            const cart = loadHomeCart();
+            cart[productId] = (cart[productId] || 0) + quantity;
+            saveHomeCart(cart);
+            return true;
+        }
+
+        // Test Functions
+        function testProductsLoading() {
+            const result = document.getElementById('products-result');
+            try {
+                if (typeof PRODUCTS === 'undefined') {
+                    result.className = 'result error';
+                    result.textContent = '❌ PRODUCTS array is not defined!\nMake sure products.js is loaded.';
+                    return;
+                }
+                
+                result.className = 'result success';
+                result.textContent = `✅ SUCCESS!\n\nProducts loaded: ${PRODUCTS.length} items\n\nSample products:\n${PRODUCTS.slice(0, 3).map(p => `- ${p.title} (₦${p.price.toLocaleString()})`).join('\n')}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        function testCartFunctions() {
+            const result = document.getElementById('cart-result');
+            try {
+                // Clear cart first
+                localStorage.removeItem('shop_cart');
+                
+                // Test adding to cart
+                const testProduct = PRODUCTS[0];
+                const added = addToCart(testProduct.id, 2);
+                
+                if (!added) {
+                    result.className = 'result error';
+                    result.textContent = '❌ Failed to add product to cart';
+                    return;
+                }
+                
+                // Test loading cart
+                const cart = loadHomeCart();
+                const cartCount = Object.values(cart).reduce((s,n) => s+n, 0);
+                
+                result.className = 'result success';
+                result.textContent = `✅ SUCCESS!\n\nAdded: ${testProduct.title}\nQuantity: 2\nCart items: ${cartCount}\n\nCart contents:\n${JSON.stringify(cart, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        function testWishlistFunctions() {
+            const result = document.getElementById('wishlist-result');
+            try {
+                // Clear wishlist first
+                localStorage.removeItem('shop_wishlist');
+                
+                // Test adding to wishlist
+                const testProduct = PRODUCTS[1];
+                let wishlist = loadWishlist();
+                wishlist.push(testProduct.id);
+                saveWishlist(wishlist);
+                
+                // Test loading wishlist
+                wishlist = loadWishlist();
+                
+                result.className = 'result success';
+                result.textContent = `✅ SUCCESS!\n\nAdded: ${testProduct.title}\nWishlist items: ${wishlist.length}\n\nWishlist:\n${JSON.stringify(wishlist, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        function testSearchFilter() {
+            const result = document.getElementById('search-result');
+            try {
+                // Test search
+                const searchResults = searchProducts('phone');
+                
+                // Test filter
+                const electronicsProducts = filterByCategory('electronics');
+                
+                result.className = 'result success';
+                result.textContent = `✅ SUCCESS!\n\nSearch "phone": ${searchResults.length} results\n${searchResults.slice(0, 3).map(p => `- ${p.title}`).join('\n')}\n\nElectronics category: ${electronicsProducts.length} products\n${electronicsProducts.slice(0, 3).map(p => `- ${p.title}`).join('\n')}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        function testThemeToggle() {
+            const result = document.getElementById('theme-result');
+            try {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('shopease_theme', newTheme);
+                
+                result.className = 'result success';
+                result.textContent = `✅ SUCCESS!\n\nTheme changed from ${currentTheme} to ${newTheme}\n\nCheck the page background - it should have changed!`;
+                
+                // Apply some visual feedback
+                document.body.style.background = newTheme === 'dark' ? '#1e293b' : '#f5f5f5';
+                document.body.style.color = newTheme === 'dark' ? '#f1f5f9' : '#000';
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        // Auto-run products test on load
+        window.addEventListener('load', () => {
+            setTimeout(testProductsLoading, 500);
+        });
+    </script>
+</body>
+</html>
