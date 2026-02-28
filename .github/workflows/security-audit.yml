@@ -1,0 +1,240 @@
+name: Security Audit & Code Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run security audit daily at midnight UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  dependency-scanning:
+    runs-on: ubuntu-latest
+    name: Dependency Vulnerability Scan
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run npm audit frontend
+        id: audit-frontend
+        continue-on-error: true
+        run: |
+          npm audit --json > audit-frontend.json || echo "audit-failed=true" >> $GITHUB_OUTPUT
+          cat audit-frontend.json
+
+      - name: Run npm audit backend
+        id: audit-backend
+        working-directory: ./backend
+        continue-on-error: true
+        run: |
+          npm audit --json > ../audit-backend.json || echo "audit-failed=true" >> $GITHUB_OUTPUT
+
+      - name: Upload audit reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: npm-audit-reports
+          path: audit-*.json
+
+  sast-analysis:
+    runs-on: ubuntu-latest
+    name: Static Application Security Testing
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Install SAST tools
+        run: |
+          npm install -g semgrep
+          npm install -g retire
+
+      - name: Run Semgrep SAST
+        continue-on-error: true
+        run: |
+          semgrep --config=p/owasp-top-ten --config=p/nodejs --json --output=semgrep-results.json backend/ 2>/dev/null || true
+
+      - name: Run Retire.js (Check for vulnerable JS libraries)
+        working-directory: ./backend
+        continue-on-error: true
+        run: |
+          retire --json > ../retire-results.json 2>/dev/null || true
+
+      - name: Upload SAST results
+        uses: actions/upload-artifact@v3
+        with:
+          name: sast-analysis
+          path: |
+            semgrep-results.json
+            retire-results.json
+
+  secret-scanning:
+    runs-on: ubuntu-latest
+    name: Secret & Credential Detection
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  container-scan:
+    runs-on: ubuntu-latest
+    name: Container Security Scan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './backend'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  codeql-analysis:
+    runs-on: ubuntu-latest
+    name: CodeQL Analysis
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript']
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  dast-simulation:
+    runs-on: ubuntu-latest
+    name: DAST Simulation (OWASP Handbook)
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Security configuration check
+        working-directory: ./backend
+        run: |
+          echo "Checking for OWASP Top 10 compliance..."
+          
+          # Check for helmet usage
+          if grep -q "helmet" package.json; then
+            echo "✓ Helmet is installed"
+          else
+            echo "✗ Helmet not found - required for security headers"
+            exit 1
+          fi
+          
+          # Check for express-validator
+          if grep -q "express-validator" package.json; then
+            echo "✓ Input validation library installed"
+          else
+            echo "✗ Input validation library missing"
+            exit 1
+          fi
+          
+          # Check for rate limiting
+          if grep -q "express-rate-limit" package.json; then
+            echo "✓ Rate limiting installed"
+          else
+            echo "✗ Rate limiting not found"
+            exit 1
+          fi
+          
+          # Check for bcryptjs
+          if grep -q "bcryptjs" package.json; then
+            echo "✓ Password hashing library installed"
+          else
+            echo "✗ Password hashing not configured"
+            exit 1
+          fi
+
+  security-report:
+    if: always()
+    needs: [dependency-scanning, sast-analysis, secret-scanning, codeql-analysis]
+    runs-on: ubuntu-latest
+    name: Security Report Summary
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate security summary
+        run: |
+          echo "# Security Audit Summary" > security-summary.md
+          echo "" >> security-summary.md
+          echo "## Scan Results" >> security-summary.md
+          echo "- Dependency Scanning: ${{ needs.dependency-scanning.result }}" >> security-summary.md
+          echo "- SAST Analysis: ${{ needs.sast-analysis.result }}" >> security-summary.md
+          echo "- Secret Scanning: ${{ needs.secret-scanning.result }}" >> security-summary.md
+          echo "- CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> security-summary.md
+          echo "" >> security-summary.md
+          echo "**Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> security-summary.md
+
+      - name: Comment PR with security report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            })

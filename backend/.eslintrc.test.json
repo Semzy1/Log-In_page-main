@@ -1,0 +1,7 @@
+{
+  "extends": ["./eslint-base-config.json"],
+  "rules": {
+    "no-console": "off",
+    "security/detect-non-literal-fs-filename": "warn"
+  }
+}
