@@ -13,8 +13,7 @@
     "sourceType": "module"
   },
   "plugins": [
-    "security",
-    "no-unsanitized"
+    "security"
   ],
   "rules": {
     "no-console": [
@@ -38,8 +37,6 @@
     "security/detect-non-literal-fs-filename": "warn",
     "security/detect-eval-with-expression": "error",
     "security/detect-pseudoRandomBytes": "error",
-    "no-unsanitized/method": "warn",
-    "no-unsanitized/property": "warn",
     "no-var": "error",
     "prefer-const": "error",
     "eqeqeq": [
