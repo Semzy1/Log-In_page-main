@@ -4,6 +4,7 @@ const axios = require('axios');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const { authenticate, requireAdmin } = require('../middleware/auth');
+const { sendOrderNotification } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -210,6 +211,15 @@ router.post('/verify/:paymentId', [
       // Update order status
       payment.order.status = 'processing';
       await payment.order.save();
+
+      // Send order notification email to admin
+      try {
+        await sendOrderNotification(payment.order, req.user);
+        console.log(`[Payment] Order notification email sent for order ${payment.order.orderId}`);
+      } catch (emailError) {
+        console.error(`[Payment] Failed to send order notification email:`, emailError);
+        // Don't fail the payment verification due to email error
+      }
 
       res.json({
         success: true,

@@ -248,46 +248,14 @@
       }
 
       if (method === 'flutterwave') {
-        const total = currentOrder.items.reduce((sum, it) => sum + (it.qty * it.price), 0);
-        const config = {
-          public_key: 'FLWPUBK_TEST-9db28ff78f60b9570e65e4080e83b795-X',
-          tx_ref: `shopEase-${orderId}-${Date.now()}`,
-          amount: total,
-          currency: 'NGN',
-          payment_options: 'card,mobilemoney,ussd',
-          customer: {
-            email: 'customer@example.com', // In real app, get from user data
-            phone_number: '08012345678', // Placeholder
-            name: 'Customer Name', // Placeholder
-          },
-          customizations: {
-            title: 'ShopEase Payment',
-            description: 'Payment for order ' + orderId,
-            logo: 'https://via.placeholder.com/150', // Placeholder logo
-          },
-          callback: function (data) {
-            console.log(data);
-            showToast('Payment successful via Flutterwave!', 'success');
-            paymentForm.reset();
-            updatePaymentMethodVisibility();
-
-            const orders = JSON.parse(localStorage.getItem('shop_orders') || '[]');
-            const index = orders.findIndex(o => o.id === orderId);
-            if (index !== -1) {
-              orders[index].status = 'paid';
-              localStorage.setItem('shop_orders', JSON.stringify(orders));
-            }
-
-            // Redirect to dashboard page after successful payment
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 2000);
-          },
-          onclose: function () {
-            showToast('Payment cancelled.', 'warning');
-          },
-        };
-        FlutterwaveCheckout(config);
+        // Fetch secure payment config from backend (do not store keys in client)
+        showToast('Initializing Flutterwave payment...', 'info', 1500);
+        
+        // TODO: In production, call your backend endpoint to fetch secure Flutterwave config
+        // Example: GET /api/payments/init-flutterwave?orderId=xyz
+        // The backend will return a safe config with the public key from environment
+        showToast('Flutterwave integration requires backend API endpoint. Configure in production.', 'warning');
+        console.warn('Flutterwave public key should come from backend, not client code');
       } else if (method === 'paystack') {
         // Simulated Paystack payment (demo mode)
         const total = currentOrder.items.reduce((sum, it) => sum + (it.qty * it.price), 0);

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Post-commit hook: push the current branch to origin after each commit
+git_branch="$(git rev-parse --abbrev-ref HEAD)"
+echo "Auto-pushing branch $git_branch to origin..."
+git push origin "$git_branch" || echo "Auto-push failed; please push manually."

@@ -6,10 +6,14 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const config = require('./config');
 const app = express();
 
 // Security middleware
 app.use(helmet());
+const allowedOrigins = config.isDevelopment
+  ? ['http://localhost:3000', 'http://localhost:5173']
+  : [config.frontendUrlProd];
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
