@@ -15,7 +15,7 @@ jobs:
     name: Dependency Vulnerability Scan
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -54,7 +54,7 @@ jobs:
     name: Static Application Security Testing
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -94,7 +94,7 @@ jobs:
     name: Secret & Credential Detection
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -112,7 +112,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -137,7 +137,7 @@ jobs:
         language: ['javascript']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -155,7 +155,7 @@ jobs:
     name: DAST Simulation (OWASP Handbook)
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
         uses: actions/setup-node@v3
