@@ -3,7 +3,7 @@
     "nodemailer": "^7.0.11"
   },
   "devDependencies": {
-    "playwright": "^1.57.0"
+    "playwright": "^1.59.1"
   },
   "scripts": {
     "qa:playwright": "node tests/run-qa.js"
